@@ -1,16 +1,11 @@
-import { CoreMessage, generateText, streamText, tool } from 'ai';
+import { CoreMessage, generateText, smoothStream, streamText, tool } from 'ai';
 import { z } from 'zod';
 // Import necessary models (grounded flash for tool, non-grounded pro for main chat)
 import { geminiFlashModel, gemini25ProModel } from '@/lib/vertex';
-// Import the URL resolution utility
-import { resolveSourceUrls } from '@/lib/utils';
-// Define a type for the source objects, matching expected structure from AI SDK
-// Note: This is duplicated in utils.ts, consider a shared types file later.
-interface Source {
-  url: string;
-  title?: string;
-  [key: string]: any; // Allow other properties
-}
+// Import the URL resolution utility and the Source type
+import { resolveSourceUrls, type Source } from '@/lib/utils';
+// Removed direct prompt import, will use config
+import { getChatModeById } from '@/config/chat-modes'; // Import mode config helper
 
 
 // Define the tools
@@ -97,13 +92,37 @@ and a list of relevant sources.`,
 
 export async function POST(req: Request) {
   try {
-    const { messages }: { messages: CoreMessage[] } = await req.json();
+    // Read messages and optional data (now expecting activeModes array)
+    const { messages, data }: { messages: CoreMessage[]; data?: { activeModes?: string[] } } = await req.json();
+
+    const receivedActiveModeIds = data?.activeModes ?? [];
+    console.log("API received active modes:", receivedActiveModeIds); // For debugging
+
+    // Prepare system prompts based on active modes
+    const systemPrompts: CoreMessage[] = receivedActiveModeIds
+      .map(id => getChatModeById(id)) // Get mode config by ID
+      .filter(mode => mode?.systemPrompt) // Filter modes that have a system prompt
+      .map(mode => ({ role: 'system' as const, content: mode!.systemPrompt! })); // Create system messages
+
+    // Prepare the final messages array
+    const messagesToSend: CoreMessage[] = [
+      ...systemPrompts, // Prepend all active system prompts
+      ...messages,     // Include the original messages
+    ];
+
+    if (systemPrompts.length > 0) {
+      console.log(`Prepended ${systemPrompts.length} system prompts based on active modes.`);
+    }
 
     // Use streamText with the non-grounded Pro model and provide the tools
     const result = await streamText({
       model: gemini25ProModel, // Use the non-grounded Pro model for generation
-      messages,
+      messages: messagesToSend, // Use the potentially modified messages array
       tools: tools, // Provide all defined tools
+      experimental_transform: smoothStream({
+        delayInMs: 30,
+        chunking: 'word'
+      })
     });
 
     // Return the streaming response. The AI SDK automatically handles

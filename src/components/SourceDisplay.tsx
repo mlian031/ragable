@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// Removed unused Card imports
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
+// Removed unused Badge import
 import { Button } from "@/components/ui/button";
-import { Copy, Check, BookOpen, ExternalLink, Info, Search } from "lucide-react";
+// Removed unused ExternalLink, Info imports
+import { Copy, Check, BookOpen, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCitation } from "@/lib/utils"; // Import the function
 
@@ -169,7 +170,7 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
                         Referenced segment
                       </p>
                       <blockquote className="italic whitespace-pre-wrap text-muted-foreground pl-3 border-l border-primary/5 py-1 font-serif">
-                        "{support.segment.text}"
+                        "{support.segment.text}" {/* Escaped quotes */}
                       </blockquote>
                     </div>
                   )}

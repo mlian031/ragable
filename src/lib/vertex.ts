@@ -1,5 +1,5 @@
 import { createVertex } from '@ai-sdk/google-vertex';
-import { createVertexAnthropic } from '@ai-sdk/google-vertex/anthropic';
+// Removed unused: import { createVertexAnthropic } from '@ai-sdk/google-vertex/anthropic';
 
 // Get project ID and location from environment variables
 // These MUST be set in your Cloud Run service configuration or local environment

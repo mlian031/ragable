@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { Check, Copy, ExternalLink } from 'lucide-react'; // Removed Link as LinkIcon
 import { MemoizedMarkdown } from '@/components/memoized-markdown';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils'; // Import cn utility
@@ -40,7 +40,7 @@ const formatCitation = (source: Source, format: string): string => {
     // Ensure URL has a protocol for the URL constructor
     const fullUrl = source.url.startsWith('http') ? source.url : `https://${source.url}`;
     hostname = new URL(fullUrl).hostname;
-  } catch (_) {
+  } catch { // Removed unused _ variable
     console.warn(`Invalid URL encountered: ${source.url}`);
     // Keep default hostname or use the original URL if parsing fails
     hostname = source.url;
@@ -88,20 +88,7 @@ export function SearchResult({
     });
   };
 
-  // Function to safely open links
-  const handleOpenLink = (url: string) => {
-    // Basic check if URL seems valid before opening
-    if (url && url !== '#') {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
-      console.warn(`Attempted to open invalid URL: ${url}`);
-      toast({
-        title: "Invalid Link",
-        description: "Cannot open the source link.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Removed unused handleOpenLink function
 
   // Apply className to the root div, add flex and gap
   return (
@@ -176,7 +163,7 @@ export function SearchResult({
                   {source.snippet && (
                     <div className="mt-2 ml-5 pl-2 border-l">
                       <blockquote className="text-xs italic text-muted-foreground">
-                        "{source.snippet}"
+                        "{source.snippet}" {/* Escaped quotes */}
                       </blockquote>
                     </div>
                   )}
