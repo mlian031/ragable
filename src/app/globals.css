@@ -158,7 +158,7 @@
 
     /* Increase paragraph spacing slightly */
     p {
-      @apply leading-relaxed text-base my-4; /* Added my-4 */
+      @apply leading-relaxed text-base; /* Removed my-4 */
     }
 
     blockquote {

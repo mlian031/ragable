@@ -1,14 +1,15 @@
 'use client';
 
 import { useChat, type Message } from '@ai-sdk/react';
-import { ToolInvocation } from 'ai';
 import { MemoizedMarkdown } from '@/components/memoized-markdown';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea'; // Added Textarea
 import { Button } from '@/components/ui/button';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react'; // Added useState
 import { SearchResult, type Source as AppSource } from '@/components/SearchResult';
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { UserIcon, BotIcon, SearchIcon } from "lucide-react";
+import { UserIcon, BotIcon, SearchIcon, Copy, Edit, RefreshCw, Check } from "lucide-react"; // Added icons
+import { useToast } from "@/components/ui/use-toast"; // Added for copy feedback
 // Import Accordion components
 import {
   Accordion,
@@ -18,35 +19,80 @@ import {
 } from "@/components/ui/accordion";
 
 export default function Chat() {
-
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { toast } = useToast(); // Initialize toast
+  const { messages, input, handleInputChange, handleSubmit, isLoading, setMessages, reload } = useChat({ // Added setMessages and reload
     api: '/api/chat',
-    maxSteps: 5,
+    maxSteps: 5, // Consider if maxSteps affects regeneration
     onFinish: (message: Message) => {
       console.log("Stream finished. Final assistant message:", message);
     },
   });
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null); // State for editing message index
+  const [editedContent, setEditedContent] = useState<string>(''); // State for edited content
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   return (
-    // Main container: Removed max-width and mx-auto, kept padding
-    <div className="flex flex-col w-full px-4 py-8 md:px-6 md:py-12 min-h-screen">
-
-      {/* Chat Messages Area: Increased bottom padding, added max-width and mx-auto HERE */}
-      {/* This keeps the chat content itself centered, similar to before, but allows */}
-      {/* potential future elements outside this div to be full width. */}
-      {/* OR remove max-w/mx-auto here too if you want messages truly edge-to-edge (minus padding) */}
-      <div className="flex-grow overflow-y-auto mb-4 pb-24 space-y-8 max-w-4xl mx-auto">
+    <div className="flex flex-col max-w-4xl mx-auto px-4 py-8 md:px-6 md:py-12 min-h-screen">
+      <div className="flex-grow overflow-y-auto mb-4 pb-24 w-full">
         {messages.length > 0 ? (
-          messages.map((m: Message) => (
-            // Each message turn container
-            // Each message turn container
-            <div key={m.id} className="flex flex-col">
+          messages.map((m: Message, messageIndex: number) => ( // Added messageIndex
+            // Add relative positioning for the button container
+            <div key={m.id} className="flex flex-col py-4 relative group"> {/* Added relative and group */}
+              {/* Action Buttons Container (Top Right, appears on group hover) */}
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
+                {m.role === 'user' ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleEditStart(messageIndex)} // Call handleEditStart
+                      title="Edit message"
+                      disabled={isLoading} // Disable if loading
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleCopy(m)}
+                      title="Copy message"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </>
+                ) : ( // Assistant message
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleCopy(m)}
+                      title="Copy message"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleRegenerate(messageIndex)} // Pass messageIndex
+                      title="Regenerate response"
+                      disabled={isLoading} // Disable if already loading
+                    >
+                      {/* Consider adding a loading state specific to regeneration? */}
+                      <RefreshCw className="h-3 w-3" />
+                    </Button>
+                  </>
+                )}
+              </div>
+
               {/* Role Indicator Row: Larger avatar, more gap, bolder role text */}
               <div className="flex items-center gap-4 mb-3"> {/* Increased gap and mb */}
                 <Avatar className="h-9 w-9 border"> {/* Larger Avatar */}
@@ -62,18 +108,37 @@ export default function Chat() {
 
               {/* Message Content Area (below indicator): Adjusted indentation */}
               <div className="pl-13"> {/* Indent content based on h-9 avatar + gap-4 = 13 */}
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  {/* Iterate through message parts */}
-                  {m.parts?.map((part, index: number) => {
-                    switch (part.type) {
-                      case 'text':
-                        return (
-                          <div className='py-2' key={`${m.id}-text-${index}`}>
-                            <MemoizedMarkdown key={`${m.id}-text-${index}`} id={`${m.id}-text-${index}`} content={part.text} />
-                          </div>
-                        );
+                {/* Conditional Rendering: Edit Mode vs Display Mode */}
+                {editingIndex === messageIndex ? (
+                  // --- Edit Mode ---
+                  <div className="space-y-2 py-2">
+                    <Textarea
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                      className="w-full text-sm"
+                      rows={3}
+                      autoFocus // Focus the textarea when editing starts
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" onClick={handleCancelEdit}>Cancel</Button>
+                      <Button size="sm" onClick={handleSaveEdit} disabled={isLoading || !editedContent.trim()}>Save & Submit</Button>
+                    </div>
+                  </div>
+                ) : (
+                  // --- Display Mode ---
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {/* Iterate through message parts */}
+                    {m.parts?.map((part, index: number) => {
+                      switch (part.type) {
+                        case 'text':
+                          return (
+                            // Add w-full here to make the text container take full available width
+                            <div className='py-2 w-full' key={`${m.id}-text-${index}`}>
+                              <MemoizedMarkdown key={`${m.id}-text-${index}`} id={`${m.id}-text-${index}`} content={part.text} />
+                            </div>
+                          );
 
-                      case 'tool-invocation':
+                        case 'tool-invocation':
                         const toolInvocation = part.toolInvocation;
                         const toolCallId = toolInvocation.toolCallId;
                         const toolName = toolInvocation.toolName;
@@ -149,10 +214,11 @@ export default function Chat() {
                         return null;
                       default:
                         console.warn("Unknown message part type:", part.type, part);
-                        return null;
-                    }
-                  })}
-                </div>
+                          return null;
+                      }
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           ))
@@ -184,4 +250,102 @@ export default function Chat() {
       </div>
     </div>
   );
+
+  // --- Helper Functions ---
+
+  // Function to extract text content from a message
+  function getMessageText(message: Message): string {
+    return message.parts
+      ?.filter(part => part.type === 'text')
+      .map(part => part.text)
+      .join('') ?? ''; // Fallback to empty string if no text parts
+  }
+
+  // Function to handle copying message content
+  function handleCopy(message: Message) {
+    const textToCopy = getMessageText(message);
+    if (!textToCopy) {
+      toast({ title: "Nothing to copy", variant: "destructive" });
+      return;
+    }
+
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      toast({
+        title: "Copied to clipboard",
+        // description: "Message content copied.",
+        duration: 2000,
+      });
+    }).catch(err => {
+      console.error("Copying error:", err);
+      toast({
+        title: "Copy failed",
+        description: "Could not copy message to clipboard.",
+        variant: "destructive",
+      });
+    });
+  }
+
+  // Function to handle regenerating an assistant response
+  function handleRegenerate(assistantMessageIndex: number) {
+    if (isLoading) return; // Prevent multiple regenerations
+
+    const userMessageIndex = assistantMessageIndex - 1;
+
+    // Check if there is a preceding message and it's from the user
+    if (userMessageIndex >= 0 && messages[userMessageIndex]?.role === 'user') {
+      console.log(`Regenerating response after message index ${userMessageIndex}`);
+      // Remove the assistant message and any subsequent messages from the state
+      const messagesToKeep = messages.slice(0, assistantMessageIndex);
+      setMessages(messagesToKeep);
+      // Now call reload, which should use the updated (truncated) messages state
+      reload();
+    } else {
+      console.error("Cannot regenerate: Preceding user message not found or index out of bounds for assistant message index:", assistantMessageIndex);
+      toast({
+        title: "Regeneration failed",
+        description: "Could not find the corresponding user message to regenerate from.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  // --- Edit Functions ---
+
+  // Function to start editing a user message
+  function handleEditStart(index: number) {
+    if (messages[index]?.role === 'user') {
+      setEditingIndex(index);
+      setEditedContent(getMessageText(messages[index]));
+    }
+  }
+
+  // Function to cancel editing
+  function handleCancelEdit() {
+    setEditingIndex(null);
+    setEditedContent('');
+  }
+
+  // Function to save the edited message and trigger reload
+  function handleSaveEdit() {
+    if (editingIndex === null || !editedContent.trim()) return;
+
+    const updatedMessages = messages.map((msg, index) => {
+      if (index === editingIndex) {
+        // Update the content of the user message
+        // Explicitly type 'text' using 'as const' to satisfy the Message type
+        return { ...msg, parts: [{ type: 'text' as const, text: editedContent }] };
+      }
+      return msg;
+    });
+
+    // Keep only messages up to and including the edited one
+    const messagesToResubmit = updatedMessages.slice(0, editingIndex + 1);
+
+    setMessages(messagesToResubmit);
+    setEditingIndex(null);
+    setEditedContent('');
+    // Reload the chat with the updated history
+    reload();
+  }
+
 }

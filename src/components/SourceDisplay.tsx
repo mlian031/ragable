@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, BookOpen, ExternalLink, Info, Search } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { formatCitation } from "@/lib/utils"; // Import the function
 
 // Define a more specific type for grounding metadata if possible, based on expected structure
 // This is a placeholder based on common Google grounding structures
@@ -34,24 +35,7 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
   const [citationStyle, setCitationStyle] = useState('mla'); // Default style: mla, apa, chicago
   const [copiedSourceIndex, setCopiedSourceIndex] = useState<number | null>(null);
 
-  // Basic citation formatting - enhance with citation-js for accuracy
-  const formatCitation = (source: any, style: string): string => {
-    // Placeholder logic - extract relevant info and format
-    const title = source?.title || source?.segment?.text || 'Untitled Source';
-    const uri = source?.uri || source?.searchEntryPoint?.uri || '#';
-    const accessDate = new Date().toLocaleDateString(); // Simple access date
-
-    // Very basic formatting examples
-    switch (style) {
-      case 'apa':
-        return `(${accessDate}). ${title}. Retrieved from ${uri}`;
-      case 'chicago':
-        return `"${title}." Accessed ${accessDate}. ${uri}.`;
-      case 'mla':
-      default:
-        return `"${title}." Web. Accessed ${accessDate}. <${uri}>.`;
-    }
-  };
+  // Removed local formatCitation function - it's now imported
 
   const handleCopyCitation = (citation: string, index: number) => {
     navigator.clipboard.writeText(citation).then(() => {
@@ -79,10 +63,12 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
   }
 
   // Show only queries if no support available
+  // Apply similar styling if only queries are shown
   if (!groundingMetadata.groundingSupports?.length) {
     if (groundingMetadata.webSearchQueries?.length) {
       return (
-        <div className="mt-6 pt-4 border-t border-primary/5 animate-in fade-in duration-300">
+        // Apply vertical bar styling here too for consistency
+        <div className="mt-6 relative pl-5 border-l-4 border-primary/20 animate-in fade-in duration-300">
           <div className="py-2">
             <div className="flex items-center gap-2 mb-3">
               <Search className="h-3 w-3 text-primary/70" />
@@ -103,8 +89,10 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
   }
 
   return (
-    <div className="mt-6 pt-4 border-t border-primary/5 animate-in fade-in duration-300">
-      <div className="mb-4">
+    // Add relative, pl-5, border-l-4, border-primary/20. Remove pt-4 and border-t.
+    <div className="mt-6 relative pl-5 border-l-4 border-primary/20 animate-in fade-in duration-300">
+      {/* Add some top/bottom padding inside the bordered container */}
+      <div className="mb-4 py-2">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-2">
             <BookOpen className="h-3 w-3 text-primary/70" />

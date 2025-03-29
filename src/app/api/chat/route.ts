@@ -2,7 +2,16 @@ import { CoreMessage, generateText, streamText, tool } from 'ai';
 import { z } from 'zod';
 // Import necessary models (grounded flash for tool, non-grounded pro for main chat)
 import { geminiFlashModel, gemini25ProModel } from '@/lib/vertex';
-// Removed incorrect Source import
+// Import the URL resolution utility
+import { resolveSourceUrls } from '@/lib/utils';
+// Define a type for the source objects, matching expected structure from AI SDK
+// Note: This is duplicated in utils.ts, consider a shared types file later.
+interface Source {
+  url: string;
+  title?: string;
+  [key: string]: any; // Allow other properties
+}
+
 
 // Define the tools
 const tools = {
@@ -14,8 +23,8 @@ and a list of relevant sources.`,
     parameters: z.object({
       query: z.string().describe('The search query to use. Be specific and clear.'),
     }),
-    // Adjust return type annotation for sources
-    execute: async ({ query }: { query: string }): Promise<{ context: string, sources: any[] }> => {
+    // Adjust return type annotation for sources using the Source interface
+    execute: async ({ query }: { query: string }): Promise<{ context: string, sources: Source[] }> => {
       console.log(`Executing webSearch tool for query: "${query}"`);
       try {
         // Use generateText with the grounded Flash model for retrieval
@@ -28,10 +37,17 @@ and a list of relevant sources.`,
         console.log("webSearch - Retrieval result:", JSON.stringify(retrievalResult, null, 2));
 
         const context = retrievalResult.text;
-        const sources = retrievalResult.sources ?? [];
+        // Cast sources to our Source type, assuming the structure matches (url, title, etc.)
+        const initialSources: Source[] = (retrievalResult.sources as Source[]) ?? [];
 
-        // Return context and sources for the main model to use
-        return { context, sources };
+        // Resolve redirect URLs using the utility function
+        console.log(`Resolving URLs for ${initialSources.length} sources...`);
+        const finalSources = await resolveSourceUrls(initialSources);
+        console.log(`Finished resolving URLs.`);
+
+
+        // Return context and the resolved sources for the main model to use
+        return { context, sources: finalSources };
 
       } catch (error) {
         console.error(`Error during webSearch execution for query "${query}":`, error);
