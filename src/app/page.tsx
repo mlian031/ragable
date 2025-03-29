@@ -1,103 +1,187 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useChat, type Message } from '@ai-sdk/react';
+import { ToolInvocation } from 'ai';
+import { MemoizedMarkdown } from '@/components/memoized-markdown';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useEffect, useRef } from 'react';
+import { SearchResult, type Source as AppSource } from '@/components/SearchResult';
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { UserIcon, BotIcon, SearchIcon } from "lucide-react";
+// Import Accordion components
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+export default function Chat() {
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: '/api/chat',
+    maxSteps: 5,
+    onFinish: (message: Message) => {
+      console.log("Stream finished. Final assistant message:", message);
+    },
+  });
+
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    // Main container: Removed max-width and mx-auto, kept padding
+    <div className="flex flex-col w-full px-4 py-8 md:px-6 md:py-12 min-h-screen">
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      {/* Chat Messages Area: Increased bottom padding, added max-width and mx-auto HERE */}
+      {/* This keeps the chat content itself centered, similar to before, but allows */}
+      {/* potential future elements outside this div to be full width. */}
+      {/* OR remove max-w/mx-auto here too if you want messages truly edge-to-edge (minus padding) */}
+      <div className="flex-grow overflow-y-auto mb-4 pb-24 space-y-8 max-w-4xl mx-auto">
+        {messages.length > 0 ? (
+          messages.map((m: Message) => (
+            // Each message turn container
+            // Each message turn container
+            <div key={m.id} className="flex flex-col">
+              {/* Role Indicator Row: Larger avatar, more gap, bolder role text */}
+              <div className="flex items-center gap-4 mb-3"> {/* Increased gap and mb */}
+                <Avatar className="h-9 w-9 border"> {/* Larger Avatar */}
+                  <AvatarFallback className={m.role === 'user' ? 'bg-primary/10 text-primary' : 'bg-muted'}>
+                    {/* Slightly larger icons */}
+                    {m.role === 'user' ? <UserIcon size={18} /> : <BotIcon size={18} />}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm font-medium capitalize text-foreground"> {/* Bolder, standard foreground */}
+                  {m.role === 'user' ? 'You' : 'Assistant'}
+                </span>
+              </div>
+
+              {/* Message Content Area (below indicator): Adjusted indentation */}
+              <div className="pl-13"> {/* Indent content based on h-9 avatar + gap-4 = 13 */}
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  {/* Iterate through message parts */}
+                  {m.parts?.map((part, index: number) => {
+                    switch (part.type) {
+                      case 'text':
+                        return (
+                          <div className='py-2' key={`${m.id}-text-${index}`}>
+                            <MemoizedMarkdown key={`${m.id}-text-${index}`} id={`${m.id}-text-${index}`} content={part.text} />
+                          </div>
+                        );
+
+                      case 'tool-invocation':
+                        const toolInvocation = part.toolInvocation;
+                        const toolCallId = toolInvocation.toolCallId;
+                        const toolName = toolInvocation.toolName;
+                        const args = JSON.stringify(toolInvocation.args, null, 2);
+
+                        // Handle webSearch Tool Display
+                        if (toolName === 'webSearch') {
+                          if (!('result' in toolInvocation)) {
+                            return (
+                              <div key={`${m.id}-tool-${toolCallId}`} className="mt-2 flex items-center gap-2 p-3 bg-muted rounded text-sm text-muted-foreground">
+                                <SearchIcon className="h-4 w-4 animate-spin" />
+                                Searching the web for: <span className="font-mono text-xs">{toolInvocation.args.query}</span>...
+                              </div>
+                            );
+                          }
+
+                          const searchResultData = toolInvocation.result as any;
+                          const searchContext = searchResultData?.context || "No summary available.";
+                          const searchSourcesRaw = searchResultData?.sources || [];
+                          const adaptedSources: AppSource[] = searchSourcesRaw.map((sdkSource: any, idx: number) => ({
+                            id: sdkSource.url || `tool-source-${toolCallId}-${idx}`,
+                            title: sdkSource.title || 'Untitled Source',
+                            url: sdkSource.url || '#',
+                            snippet: sdkSource.snippet || undefined,
+                          }));
+
+                          // Render SearchResult inside a styled Accordion
+                          return (
+                            <Accordion key={`${m.id}-tool-${toolCallId}`} type="single" collapsible className="max-w-4xl py-4">
+                              {/* Removed border and bg from item, added padding to trigger */}
+                              <AccordionItem value="search-results" className="border-none">
+                                <AccordionTrigger className="text-sm hover:no-underline py-2 px-2 rounded hover:bg-muted/50 text-muted-foreground">
+                                  Show Search Results ({adaptedSources.length} sources)
+                                </AccordionTrigger>
+                                {/* Added padding and top border to content */}
+                                <AccordionContent className="pt-4 pb-2 border-t mt-2">
+                                  <SearchResult
+                                    answer={searchContext}
+                                    sources={adaptedSources}
+                                    // Pass className to remove internal padding if needed by AccordionContent
+                                    className="pt-0"
+                                  />
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
+                          );
+                        }
+
+                        // Handle Other Tools
+                        if (!('result' in toolInvocation)) {
+                          return (
+                            <div key={`${m.id}-tool-${toolCallId}`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                              Calling tool: <span className="font-mono">{toolName}</span>...
+                            </div>
+                          );
+                        }
+                        const result = JSON.stringify(toolInvocation.result, null, 2);
+                        return (
+                          <div key={`${m.id}-tool-${toolCallId}`} className="mt-2 p-2 bg-green-100 dark:bg-green-900/30 rounded text-sm">
+                            <details>
+                              <summary className="cursor-pointer text-xs text-muted-foreground">
+                                Tool <span className="font-mono">{toolName}</span> result:
+                              </summary>
+                              {/* Allow horizontal scroll only for the pre block if needed */}
+                              <div className="mt-1 overflow-x-auto">
+                                <pre className="font-mono text-xs whitespace-pre-wrap">{result}</pre>
+                              </div>
+                            </details>
+                          </div>
+                        );
+
+                      case 'source': // Should not appear here with tool approach
+                        return null;
+                      default:
+                        console.warn("Unknown message part type:", part.type, part);
+                        return null;
+                    }
+                  })}
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          // Placeholder when no messages exist
+          <div className="flex h-full items-center justify-center text-muted-foreground">
+            Start chatting below!
+          </div>
+        )}
+        {/* Element to scroll to */}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Form: Sticky, background blur, increased padding */}
+      <div className="sticky bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-t">
+        {/* Increased padding */}
+        <form onSubmit={handleSubmit} className="flex items-center gap-3 p-4 md:p-6 max-w-4xl mx-auto">
+          <Input
+            className="flex-grow h-10" // Slightly larger input
+            value={input}
+            placeholder="Ask about anything..."
+            onChange={handleInputChange}
+            disabled={isLoading}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <Button type="submit" disabled={isLoading || !input.trim()}>
+            {isLoading ? 'Thinking...' : 'Send'}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }
