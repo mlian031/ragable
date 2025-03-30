@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useRef, useState, useCallback } from 'react'; // React hooks - Added useCallback
 import { SearchResult, type Source as AppSource } from '@/components/SearchResult';
 import { useToast } from '@/components/ui/use-toast';
-import { Edit, Copy, RotateCw, Cpu } from 'lucide-react'; // Icons - Added Cpu
+import { Edit, Copy, RotateCw, Cpu, FileText, Image as ImageIcon } from 'lucide-react'; // Icons - Added Cpu, FileText, ImageIcon
+import { cn, truncateFileName } from '@/lib/utils'; // Import cn and truncateFileName
 import {
   Accordion,
   AccordionContent,
@@ -141,15 +142,29 @@ export default function Chat() {
     }
   }
 
+  // Type for attachment info passed from ChatInput and stored in local message
+  type LocalAttachmentInfo = {
+    name: string;
+    mimeType: string;
+  };
+
   const handleSubmitWrapper = useCallback((
     e: React.FormEvent<HTMLFormElement>,
-    options?: { data?: Record<string, any> }
+    options?: { data?: Record<string, any> & { localAttachments?: LocalAttachmentInfo[] } } // Expect localAttachments
   ) => {
     const activeModeIds = Array.from(activeModes);
+    const localAttachments = options?.data?.localAttachments ?? [];
+
+    // --- Removed manual local message addition ---
+
+    // Prepare data for the actual backend submission (remove localAttachments but keep it for the hook)
+    const backendData = { ...options?.data };
+    delete backendData.localAttachments; // Don't send this to the backend
+
     originalHandleSubmit(e, {
-      data: { ...options?.data, activeModes: activeModeIds }
+      data: { ...backendData, activeModes: activeModeIds }
     });
-  }, [activeModes, input, originalHandleSubmit]); // Added useCallback dependencies
+  }, [activeModes, input, originalHandleSubmit, setMessages]); // Added setMessages dependency
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -198,200 +213,226 @@ export default function Chat() {
                       </div>
                     </div>
                   ) : (
-                    <div className="prose prose-sm dark:prose-invert max-w-none">
-                      {(() => {
-                        // Check if this message contains a displayCode tool invocation
-                        const hasDisplayCodeTool = m.parts?.some(part => part.type === 'tool-invocation' && part.toolInvocation.toolName === 'displayCode');
-
-                        return m.parts?.map((part, index: number) => {
+                    <> {/* Wrapper Fragment */}
+                      <div className="prose prose-sm dark:prose-invert max-w-none space-y-2"> {/* Added space-y-2 */}
+                        {/* Iterate through message parts for rendering */}
+                        {m.parts?.map((part, index: number) => {
                           switch (part.type) {
                             case 'text':
                               return <MemoizedMarkdown key={`${m.id}-text-${index}`} id={`${m.id}-text-${index}`} content={part.text} />;
                             case 'tool-invocation':
                               const toolInvocation = part.toolInvocation;
                               const toolCallId = toolInvocation.toolCallId;
-                            const toolName = toolInvocation.toolName;
+                              const toolName = toolInvocation.toolName;
 
-                            // Handle webSearch
-                            if (toolName === 'webSearch') {
+                              // Handle webSearch
+                              if (toolName === 'webSearch') {
+                                if (!('result' in toolInvocation)) {
+                                  // Updated webSearch loading indicator
+                                  return (
+                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                      <Badge variant="outline" className="text-xs font-normal items-center">
+                                        <span className="mr-2 h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                        Searching...
+                                      </Badge>
+                                    </div>
+                                  );
+                                }
+                                // --- Updated to handle structured result ---
+                                const searchResult = toolInvocation.result as { status: string, summary: string, context: string, sources: SdkSource[] } | undefined;
+
+                                // Handle potential error status from tool
+                                if (searchResult?.status === 'error') {
+                                  return (
+                                     <div key={`${m.id}-tool-${toolCallId}-error`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
+                                       Error during search: {searchResult.summary || 'Unknown error'}
+                                     </div>
+                                   );
+                                }
+
+                                // Proceed if status is success (or structure is old/unexpected)
+                                const searchContext = searchResult?.context || "No search context available.";
+                                const searchSourcesRaw = searchResult?.sources || [];
+                                const adaptedSources: AppSource[] = searchSourcesRaw.map((sdkSource: SdkSource, idx: number) => ({
+                                  id: sdkSource.url || `tool-source-${toolCallId}-${idx}`, // Use URL as ID if available
+                                  title: sdkSource.title || 'Untitled Source',
+                                  url: sdkSource.url || '#',
+                                  snippet: sdkSource.snippet || undefined,
+                                }));
+                                return (
+                                  <Accordion key={`${m.id}-tool-${toolCallId}`} type="single" collapsible className="w-full bg-muted/30 rounded-md my-2"> {/* Added my-2 */}
+                                    <AccordionItem value="sources" className="border-none">
+                                      <AccordionTrigger className="text-sm hover:no-underline py-3 px-4 text-muted-foreground">
+                                        Show Search Results ({adaptedSources.length} sources)
+                                      </AccordionTrigger>
+                                      <AccordionContent className="pt-0 pb-4 px-4">
+                                        <SearchResult answer={searchContext} sources={adaptedSources} className="pt-0" />
+                                      </AccordionContent>
+                                    </AccordionItem>
+                                  </Accordion>
+                                );
+                              }
+
+                              // Handle displayCode tool
+                              if (toolName === 'displayCode') {
+                                if (!('result' in toolInvocation)) {
+                                  // Added displayCode loading indicator
+                                  return (
+                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                      <Badge variant="outline" className="text-xs font-normal items-center">
+                                        <span className="mr-2 h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                                        Generating code...
+                                      </Badge>
+                                    </div>
+                                  );
+                                }
+                                // --- Updated to handle structured result ---
+                                const codeResult = toolInvocation.result as { status: string, summary: string, language: string, code: string, filename?: string } | undefined;
+
+                                // Handle potential error status
+                                if (codeResult?.status === 'error') {
+                                   return (
+                                     <div key={`${m.id}-tool-${toolCallId}-error`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
+                                       Error generating code: {codeResult.summary || 'Unknown error'}
+                                     </div>
+                                   );
+                                }
+
+                                // Extract data from the structured result
+                                const language = codeResult?.language;
+                                const code = codeResult?.code;
+                                const filename = codeResult?.filename;
+
+                                // Basic validation
+                                if (!language || !code) {
+                                  console.error("Invalid data for CodeBlock:", codeResult);
+                                  return (
+                                    <div key={`${m.id}-tool-${toolCallId}-invalid`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
+                                      Error: Received invalid data structure for code block.
+                                    </div>
+                                  );
+                                }
+
+                                return (
+                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="my-2"> {/* Add margin */}
+                                    <CodeBlock
+                                      language={language}
+                                      code={code}
+                                      filename={filename}
+                                    />
+                                  </div>
+                                );
+                              }
+
+                              // --- Add loading indicators for new tools ---
+                              // Handle Chemistry Visualizer
+                              if (toolName === 'chem-visualizer') {
+                                if (!('result' in toolInvocation)) {
+                                  return (
+                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                      <Badge variant="outline" className="text-xs font-normal items-center">
+                                        <span className="mr-2 h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
+                                        Visualizing chemistry...
+                                      </Badge>
+                                    </div>
+                                  );
+                                }
+                                // Placeholder for result handling
+                                return (
+                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                                    <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
+                                  </div>
+                                );
+                              }
+
+                              // Handle Plot Function
+                              if (toolName === 'plot-function') {
+                                if (!('result' in toolInvocation)) {
+                                  return (
+                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                      <Badge variant="outline" className="text-xs font-normal items-center">
+                                        <span className="mr-2 h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
+                                        Plotting function...
+                                      </Badge>
+                                    </div>
+                                  );
+                                }
+                                // Placeholder for result handling
+                                return (
+                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                                    <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
+                                  </div>
+                                );
+                              }
+
+                              // Handle Double Check
+                              if (toolName === 'double-check') {
+                                if (!('result' in toolInvocation)) {
+                                  return (
+                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                      <Badge variant="outline" className="text-xs font-normal items-center">
+                                        <span className="mr-2 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                                        Double checking...
+                                      </Badge>
+                                    </div>
+                                  );
+                                }
+                                // Placeholder for result handling
+                                return (
+                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                                    <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
+                                  </div>
+                                );
+                              }
+
+                              // Handle Other/Unknown Tools (Generic Placeholder)
                               if (!('result' in toolInvocation)) {
-                                // Updated webSearch loading indicator
                                 return (
-                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                    <Badge variant="outline" className="text-xs font-normal items-center">
-                                      <span className="mr-2 h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                      Searching...
-                                    </Badge>
+                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                                    Calling tool: <span className="font-mono">{toolName}</span>...
                                   </div>
                                 );
                               }
-                              // --- Updated to handle structured result ---
-                              const searchResult = toolInvocation.result as { status: string, summary: string, context: string, sources: SdkSource[] } | undefined;
-
-                              // Handle potential error status from tool
-                              if (searchResult?.status === 'error') {
-                                return (
-                                   <div key={`${m.id}-tool-${toolCallId}-error`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
-                                     Error during search: {searchResult.summary || 'Unknown error'}
-                                   </div>
-                                 );
-                              }
-
-                              // Proceed if status is success (or structure is old/unexpected)
-                              const searchContext = searchResult?.context || "No search context available.";
-                              const searchSourcesRaw = searchResult?.sources || [];
-                              const adaptedSources: AppSource[] = searchSourcesRaw.map((sdkSource: SdkSource, idx: number) => ({
-                                id: sdkSource.url || `tool-source-${toolCallId}-${idx}`, // Use URL as ID if available
-                                title: sdkSource.title || 'Untitled Source',
-                                url: sdkSource.url || '#',
-                                snippet: sdkSource.snippet || undefined,
-                              }));
-                              return (
-                                <Accordion key={`${m.id}-tool-${toolCallId}`} type="single" collapsible className="w-full bg-muted/30 rounded-md">
-                                  <AccordionItem value="sources" className="border-none">
-                                    <AccordionTrigger className="text-sm hover:no-underline py-3 px-4 text-muted-foreground">
-                                      Show Search Results ({adaptedSources.length} sources)
-                                    </AccordionTrigger>
-                                    <AccordionContent className="pt-0 pb-4 px-4">
-                                      <SearchResult answer={searchContext} sources={adaptedSources} className="pt-0" />
-                                    </AccordionContent>
-                                  </AccordionItem>
-                                </Accordion>
-                              );
-                            }
-
-                            // Handle displayCode tool
-                            if (toolName === 'displayCode') {
-                              if (!('result' in toolInvocation)) {
-                                // Added displayCode loading indicator
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                    <Badge variant="outline" className="text-xs font-normal items-center">
-                                      <span className="mr-2 h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                                      Generating code...
-                                    </Badge>
-                                  </div>
-                                );
-                              }
-                              // --- Updated to handle structured result ---
-                              const codeResult = toolInvocation.result as { status: string, summary: string, language: string, code: string, filename?: string } | undefined;
-
-                              // Handle potential error status (though displayCode doesn't explicitly return errors currently)
-                              if (codeResult?.status === 'error') {
-                                 return (
-                                   <div key={`${m.id}-tool-${toolCallId}-error`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
-                                     Error generating code: {codeResult.summary || 'Unknown error'}
-                                   </div>
-                                 );
-                              }
-
-                              // Extract data from the structured result
-                              const language = codeResult?.language;
-                              const code = codeResult?.code;
-                              const filename = codeResult?.filename;
-
-                              // Basic validation
-                              if (!language || !code) {
-                                console.error("Invalid data for CodeBlock:", codeResult);
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-invalid`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
-                                    Error: Received invalid data structure for code block.
-                                  </div>
-                                );
-                              }
-
-                              return (
-                                <div key={`${m.id}-tool-${toolCallId}-result`} className="my-2"> {/* Add margin */}
-                                  <CodeBlock
-                                    language={language}
-                                    code={code}
-                                    filename={filename}
-                                  />
-                                </div>
-                              );
-                            }
-
-                            // --- Add loading indicators for new tools ---
-
-                            // Handle Chemistry Visualizer
-                            if (toolName === 'chem-visualizer') {
-                              if (!('result' in toolInvocation)) {
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                    <Badge variant="outline" className="text-xs font-normal items-center">
-                                      <span className="mr-2 h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
-                                      Visualizing chemistry...
-                                    </Badge>
-                                  </div>
-                                );
-                              }
-                              // Placeholder for result handling
                               return (
                                 <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
+                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span></div>
                                 </div>
                               );
-                            }
-
-                            // Handle Plot Function
-                            if (toolName === 'plot-function') {
-                              if (!('result' in toolInvocation)) {
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                    <Badge variant="outline" className="text-xs font-normal items-center">
-                                      <span className="mr-2 h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
-                                      Plotting function...
-                                    </Badge>
-                                  </div>
-                                );
-                              }
-                              // Placeholder for result handling
-                              return (
-                                <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
-                                </div>
-                              );
-                            }
-
-                            // Handle Double Check
-                            if (toolName === 'double-check') {
-                              if (!('result' in toolInvocation)) {
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                    <Badge variant="outline" className="text-xs font-normal items-center">
-                                      <span className="mr-2 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
-                                      Double checking...
-                                    </Badge>
-                                  </div>
-                                );
-                              }
-                              // Placeholder for result handling
-                              return (
-                                <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
-                                </div>
-                              );
-                            }
-
-                            // Handle Other/Unknown Tools (Generic Placeholder)
-                            if (!('result' in toolInvocation)) {
-                              return (
-                                <div key={`${m.id}-tool-${toolCallId}`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                  Calling tool: <span className="font-mono">{toolName}</span>...
-                                </div>
-                              );
-                            }
-                            return (
-                              <div key={`${m.id}-tool-${toolCallId}`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span></div>
-                              </div>
-                            );
                             default:
-                              return null;
+                              return null; // Or render a placeholder for unknown part types
                           }
-                        });
-                      })()}
-                    </div>
+                        })}
+                        {/* Render simple string content if parts array doesn't exist (fallback) */}
+                        {typeof m.content === 'string' && !m.parts && m.content && (
+                           <MemoizedMarkdown key={`${m.id}-text-fallback`} id={`${m.id}-text-fallback`} content={m.content} />
+                        )}
+                      </div>
+
+                      {/* Render Attachment Badges for User Messages (remains the same) */}
+                      {m.role === 'user' && (m as any).experimental_customData?.attachments && (m as any).experimental_customData.attachments.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {(m as any).experimental_customData.attachments.map((att: LocalAttachmentInfo, index: number) => {
+                            const isImage = att.mimeType.startsWith('image/');
+                            const badgeColor = isImage
+                              ? 'bg-green-100 border-green-300 text-green-800 dark:bg-green-900/50 dark:border-green-700 dark:text-green-300'
+                              : 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900/50 dark:border-blue-700 dark:text-blue-300';
+                            const Icon = isImage ? ImageIcon : FileText;
+
+                            return (
+                              <Badge
+                                key={`${m.id}-att-${index}`}
+                                variant="outline" // Use outline and apply custom colors
+                                className={cn("py-1 px-2 text-xs font-normal items-center", badgeColor)}
+                              >
+                                <Icon className="h-3 w-3 mr-1.5" />
+                                {/* Use the imported truncateFileName helper */}
+                                <span title={att.name}>{truncateFileName(att.name, 10)}</span>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </>
                   )}
                   {/* Render token usage badge for assistant messages */}
                   {m.role === 'assistant' && tokenUsage.has(m.id) && (
@@ -428,6 +469,7 @@ export default function Chat() {
           isLoading={isLoading}
           activeModes={activeModes}
           toggleChatMode={toggleChatMode}
+          setMessages={setMessages} // Pass setMessages down
         />
       </div>
     </TooltipProvider>

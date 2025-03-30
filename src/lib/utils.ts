@@ -5,6 +5,37 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Helper function to truncate file names, preserving extension
+export const truncateFileName = (name: string, maxLength: number = 10): string => {
+  if (name.length <= maxLength) {
+    return name;
+  }
+  const ellipsis = '...';
+  const ellipsisLength = ellipsis.length;
+
+  // Find the last dot for the extension
+  const lastDotIndex = name.lastIndexOf('.');
+  let extension = '';
+  let nameWithoutExtension = name;
+
+  // Check if there's an extension and it's reasonably short
+  if (lastDotIndex > 0 && name.length - lastDotIndex <= 5) { // Limit extension length check
+    extension = name.substring(lastDotIndex);
+    nameWithoutExtension = name.substring(0, lastDotIndex);
+  }
+
+  // Calculate how many characters of the name (without extension) can be shown
+  const availableLength = maxLength - extension.length - ellipsisLength;
+
+  if (availableLength <= 0) {
+    // Not enough space even for ellipsis + extension, just truncate the whole name
+    return name.substring(0, maxLength - ellipsisLength) + ellipsis;
+  }
+
+  return nameWithoutExtension.substring(0, availableLength) + ellipsis + extension;
+};
+
+
 // Define a type for the source objects AFTER URL resolution
 // URL should be required here. URI is only relevant as input.
 export interface Source {

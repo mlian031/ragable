@@ -1,4 +1,4 @@
-import { CoreMessage, generateText, smoothStream, streamText, tool } from 'ai';
+import { CoreMessage, FilePart, generateText, smoothStream, streamText, tool, TextPart } from 'ai'; // Added FilePart, TextPart
 import { z } from 'zod';
 // Import necessary models (grounded flash for tool, non-grounded pro for main chat)
 import { geminiFlashModel, gemini25ProModel } from '@/lib/vertex';
@@ -80,13 +80,22 @@ and a list of relevant sources.`,
   }),
 };
 
+// Define the type for the expected file data from the frontend
+type ReceivedFileData = {
+  name: string;
+  mimeType: string;
+  data: string; // Base64 data URL string
+};
+
 export async function POST(req: Request) {
   try {
-    // Read messages and optional data (now expecting activeModes array)
-    const { messages, data }: { messages: CoreMessage[]; data?: { activeModes?: string[] } } = await req.json();
+    // Read messages and optional data (now expecting activeModes and files arrays)
+    const { messages, data }: { messages: CoreMessage[]; data?: { activeModes?: string[]; files?: ReceivedFileData[] } } = await req.json();
 
     const receivedActiveModeIds = data?.activeModes ?? [];
-    console.log("API received active modes:", receivedActiveModeIds); // For debugging
+    const receivedFiles = data?.files ?? [];
+    console.log("API received active modes:", receivedActiveModeIds);
+    console.log(`API received ${receivedFiles.length} files.`); // For debugging
 
     // Prepare system prompts based on active modes
     const systemPrompts: CoreMessage[] = receivedActiveModeIds
@@ -97,8 +106,74 @@ export async function POST(req: Request) {
     // Prepare the final messages array
     const messagesToSend: CoreMessage[] = [
       ...systemPrompts, // Prepend all active system prompts
-      ...messages,     // Include the original messages
+      ...messages,     // Include the original messages (will be potentially modified below)
     ];
+
+    // --- Process received files and add them to the last user message ---
+    if (receivedFiles.length > 0) {
+      const lastUserMessageIndex = messagesToSend.findLastIndex(m => m.role === 'user');
+
+      if (lastUserMessageIndex !== -1) {
+        const lastUserMessage = messagesToSend[lastUserMessageIndex];
+
+        // Ensure content is an array of parts. Start with existing text content.
+        let contentArray: Array<TextPart | FilePart> = [];
+        if (typeof lastUserMessage.content === 'string') {
+          contentArray.push({ type: 'text', text: lastUserMessage.content });
+        } else {
+           // If content is not a string, it's unexpected based on CoreMessage type.
+           // Log a warning and default to an empty text part or handle appropriately.
+           console.warn(`User message content at index ${lastUserMessageIndex} was not a string. Initializing with empty text.`);
+           // contentArray.push({ type: 'text', text: '' }); // Or handle based on actual expected structure if CoreMessage changes
+           // For now, let's assume if it's not a string, we might be dealing with an unexpected state or prior modification.
+           // Let's try to proceed assuming it might be an array already, though CoreMessage type says no.
+           // This part might need refinement based on how CoreMessage is truly defined/used upstream.
+           // Safest approach: treat non-string as needing initialization.
+           if (Array.isArray(lastUserMessage.content)) {
+             // If it IS an array despite CoreMessage type, try to use it but filter for TextPart/FilePart?
+             // This indicates a potential type mismatch upstream or downstream.
+             console.warn(`User message content at index ${lastUserMessageIndex} was an array, which contradicts CoreMessage type. Attempting to use.`);
+             contentArray = lastUserMessage.content.filter(part => part.type === 'text' || part.type === 'file') as Array<TextPart | FilePart>;
+           } else {
+             contentArray.push({ type: 'text', text: '' }); // Default if not string or array
+           }
+        }
+
+        // Process and add files
+        for (const file of receivedFiles) {
+          try {
+            // Extract base64 data (remove potential data URL prefix like 'data:image/png;base64,')
+            const base64Data = file.data.split(',')[1] ?? file.data; // Fallback if no prefix
+            const buffer = Buffer.from(base64Data, 'base64');
+            contentArray.push({
+              type: 'file',
+              mimeType: file.mimeType,
+              data: buffer,
+              filename: file.name, // Include filename if available
+            });
+            console.log(`Processed and added file: ${file.name} (${file.mimeType})`);
+          } catch (error) {
+            console.error(`Error processing file ${file.name}:`, error);
+            // Optionally, inform the user about the specific file error?
+            // For now, just log and skip the file.
+          }
+        }
+
+        // Update the message in the array. We cast here because we know we're changing the structure
+        // potentially away from the strict CoreMessage type for this specific message.
+        messagesToSend[lastUserMessageIndex] = {
+          ...lastUserMessage,
+          content: contentArray,
+        } as CoreMessage; // Cast back to CoreMessage, acknowledging the potential structural difference for this element
+        console.log(`Added ${receivedFiles.length} files to the last user message.`);
+
+      } else {
+        console.warn("Received files but couldn't find a user message to attach them to.");
+        // Handle this case? Maybe send a separate message or ignore?
+      }
+    }
+    // --- End file processing ---
+
 
     if (systemPrompts.length > 0) {
       console.log(`Prepended ${systemPrompts.length} system prompts based on active modes.`);
