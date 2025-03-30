@@ -1,4 +1,4 @@
-import { Globe, LucideIcon } from 'lucide-react';
+import { Globe, LucideIcon, Code2 } from 'lucide-react'; // Added Code2 icon
 
 export interface ChatMode {
   id: string; // Unique identifier
@@ -16,7 +16,13 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     icon: Globe,
     systemPrompt: `You MUST use the search tool to answer this query. Do not rely on your existing knowledge. Provide comprehensive results based *only* on the search information provided.`,
   },
-  // Add other modes here in the future, e.g.:
+  CODE_GENERATION: {
+    id: 'CODE_GENERATION',
+    label: 'Code Generation Preferred',
+    icon: Code2,
+    systemPrompt: `The user REQUIRES you to use the displayCode tool for a technical example of what they were talking about. Prioritize generating clear, functional code snippets using the displayCode tool.`,
+  },
+  // Example for future:
   // CALCULATOR_MODE: {
   //   id: 'CALCULATOR_MODE',
   //   label: 'Calculator Mode Active',

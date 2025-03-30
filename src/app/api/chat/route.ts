@@ -18,8 +18,8 @@ and a list of relevant sources.`,
     parameters: z.object({
       query: z.string().describe('The search query to use. Be specific and clear.'),
     }),
-    // Adjust return type annotation for sources using the Source interface
-    execute: async ({ query }: { query: string }): Promise<{ context: string, sources: Source[] }> => {
+    // Return structured result
+    execute: async ({ query }: { query: string }): Promise<{ status: string, summary: string, context: string, sources: Source[] } | { status: string, summary: string, context: string, sources: Source[] }> => {
       console.log(`Executing webSearch tool for query: "${query}"`);
       try {
         // Use generateText with the grounded Flash model for retrieval
@@ -28,8 +28,6 @@ and a list of relevant sources.`,
           prompt: `Perform a web search to answer the following query: "${query}". Provide a concise summary based *only* on the search results.`,
           // You might add safety settings or other parameters here if needed
         });
-
-        console.log("webSearch - Retrieval result:", JSON.stringify(retrievalResult, null, 2));
 
         const context = retrievalResult.text;
         // Cast sources to our Source type, assuming the structure matches (url, title, etc.)
@@ -41,51 +39,43 @@ and a list of relevant sources.`,
         console.log(`Finished resolving URLs.`);
 
 
-        // Return context and the resolved sources for the main model to use
-        return { context, sources: finalSources };
+        // Return structured success result
+        return {
+          status: 'success',
+          summary: `Web search for "${query}" completed.`,
+          context,
+          sources: finalSources
+        };
 
       } catch (error) {
         console.error(`Error during webSearch execution for query "${query}":`, error);
-        // Return an error message or empty results if the search fails
+        // Return structured error result
         return {
+          status: 'error',
+          summary: `Error searching for "${query}": ${error instanceof Error ? error.message : 'Unknown error'}`,
           context: `Sorry, I encountered an error while searching for "${query}".`,
           sources: []
         };
       }
     },
   }),
-  calculator: tool({
-    description: 'Calculate the result of a mathematical expression.',
+  displayCode: tool({
+    description: `Displays a code snippet. Use this tool whenever you generate code as part of your response. Provide the programming language, the code itself, and optionally a filename.`,
     parameters: z.object({
-      expression: z.string().describe('The mathematical expression to evaluate.'),
+      language: z.string().describe('The programming language of the code (e.g., "typescript", "python", "html").'),
+      filename: z.string().optional().describe('An optional filename or label for the code block.'), // Made optional
+      code: z.string().describe('The code snippet to display.'),
     }),
-    execute: async ({ expression }) => {
-      try {
-        const safeExpression = expression.replace(/[^-()\d/*+.]/g, '');
-        const result = new Function(`return ${safeExpression}`)();
-        if (typeof result !== 'number' || isNaN(result)) {
-          throw new Error('Invalid calculation');
-        }
-        return { result };
-      } catch (error) {
-        console.error("Calculator error:", error);
-        return { error: error instanceof Error ? error.message : 'Calculation failed' };
-      }
-    },
-  }),
-  defineWord: tool({
-    description: 'Get the definition of a word.',
-    parameters: z.object({
-      word: z.string().describe('The word to define.'),
-    }),
-    execute: async ({ word }) => {
-      const definitions: Record<string, string> = {
-        'ephemeral': 'Lasting for a very short time.',
-        'ubiquitous': 'Present, appearing, or found everywhere.',
-        'serendipity': 'The occurrence and development of events by chance in a happy or beneficial way.',
+    // Return structured result
+    execute: async (args: { language: string, code: string, filename?: string }) => {
+      console.log("Executing displayCode tool with args:", args);
+      // Return structured success result
+      return {
+        status: 'success',
+        summary: `Code block generated (${args.language}${args.filename ? `: ${args.filename}` : ''}).`,
+        ...args // Include original args (language, code, filename)
       };
-      const definition = definitions[word.toLowerCase()] || `Sorry, I don't have a definition for "${word}".`;
-      return { definition };
+      // Note: No specific error handling added here, assuming validation prevents most errors.
     },
   }),
 };
@@ -115,15 +105,32 @@ export async function POST(req: Request) {
     }
 
     // Use streamText with the non-grounded Pro model and provide the tools
+    // Add system prompt guidance for handling structured tool results
+    const toolHandlingGuidance = `When you receive tool results with 'status: success', briefly acknowledge the tool's completion based on its 'summary', then use the provided data (context, sources, code, etc.) to formulate your final response to the user's original query. Do not call the same tool again if you have already received a success status for it in this turn. If a tool result has 'status: error', inform the user about the error based on the 'summary'.`;
+
+    // Combine existing system prompts with the new guidance
+    const finalSystemPrompt = [
+        ...systemPrompts.map(p => p.content),
+        "Avoid writing code directly in your response text. Instead, always use the displayCode tool.", // Keep existing instruction
+        toolHandlingGuidance // Add new guidance
+    ].join('\n\n');
+
+    console.log("Final system prompt:", finalSystemPrompt); // For debugging
+
+
     const result = await streamText({
       model: gemini25ProModel, // Use the non-grounded Pro model for generation
       messages: messagesToSend, // Use the potentially modified messages array
+      system: finalSystemPrompt, // Use combined system prompt
+      temperature: 0.7,
       tools: tools, // Provide all defined tools
+      maxSteps: 2, // Allow multiple steps for tool execution + final response
       experimental_transform: smoothStream({
         delayInMs: 30,
         chunking: 'word'
-      })
+      }),
     });
+    
 
     // Return the streaming response. The AI SDK automatically handles
     // streaming text, tool calls, and tool results.

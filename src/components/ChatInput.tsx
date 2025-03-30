@@ -10,10 +10,8 @@ import {
   Mic,
   ImagePlus,
   Sparkles,
-  Command,
   Paperclip,
   Maximize2,
-  Globe // Added Globe icon
 } from 'lucide-react';
 import {
   Dialog,
