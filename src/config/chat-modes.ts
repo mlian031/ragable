@@ -1,4 +1,4 @@
-import { Globe, LucideIcon, Code2 } from 'lucide-react'; // Added Code2 icon
+import { Globe, LucideIcon, Code2, FlaskConical, LineChart, CheckCheck } from 'lucide-react'; // Added new icons
 
 export interface ChatMode {
   id: string; // Unique identifier
@@ -18,9 +18,27 @@ export const CHAT_MODES: Record<string, ChatMode> = {
   },
   CODE_GENERATION: {
     id: 'CODE_GENERATION',
-    label: 'Code Generation Preferred',
+    label: 'Code Generation Enabled',
     icon: Code2,
     systemPrompt: `The user REQUIRES you to use the displayCode tool for a technical example of what they were talking about. Prioritize generating clear, functional code snippets using the displayCode tool.`,
+  },
+  CHEM_VISUALIZER: {
+    id: 'CHEM_VISUALIZER',
+    label: 'Chemistry Visualizer Enabled',
+    icon: FlaskConical,
+    // No system prompt needed for now
+  },
+  PLOT_FUNCTION: {
+    id: 'PLOT_FUNCTION',
+    label: 'Plotting Enabled',
+    icon: LineChart,
+    // No system prompt needed for now
+  },
+  DOUBLE_CHECK: {
+    id: 'DOUBLE_CHECK',
+    label: 'Double Check Enabled',
+    icon: CheckCheck,
+    // No system prompt needed for now
   },
   // Example for future:
   // CALCULATOR_MODE: {

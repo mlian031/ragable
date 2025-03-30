@@ -3,6 +3,7 @@
 import { marked } from 'marked';
 import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'; // Import remark-gfm
 
 // Helper function to parse markdown into blocks using marked
 function parseMarkdownIntoBlocks(markdown: string): string[] {
@@ -13,10 +14,11 @@ function parseMarkdownIntoBlocks(markdown: string): string[] {
 }
 
 // Memoized component for rendering a single markdown block
+// Memoized component for rendering a single markdown block
 const MemoizedMarkdownBlock = memo(
   ({ content }: { content: string }) => {
-    // Render the block using ReactMarkdown
-    return <ReactMarkdown>{content}</ReactMarkdown>;
+    // Render the block using ReactMarkdown with GFM plugin
+    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
   },
   // Custom comparison function: only re-render if content changes
   (prevProps, nextProps) => {

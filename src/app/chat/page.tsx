@@ -311,7 +311,69 @@ export default function Chat() {
                               );
                             }
 
-                            // Handle Other Tools (Generic Placeholder)
+                            // --- Add loading indicators for new tools ---
+
+                            // Handle Chemistry Visualizer
+                            if (toolName === 'chem-visualizer') {
+                              if (!('result' in toolInvocation)) {
+                                return (
+                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                    <Badge variant="outline" className="text-xs font-normal items-center">
+                                      <span className="mr-2 h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
+                                      Visualizing chemistry...
+                                    </Badge>
+                                  </div>
+                                );
+                              }
+                              // Placeholder for result handling
+                              return (
+                                <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
+                                </div>
+                              );
+                            }
+
+                            // Handle Plot Function
+                            if (toolName === 'plot-function') {
+                              if (!('result' in toolInvocation)) {
+                                return (
+                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                    <Badge variant="outline" className="text-xs font-normal items-center">
+                                      <span className="mr-2 h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
+                                      Plotting function...
+                                    </Badge>
+                                  </div>
+                                );
+                              }
+                              // Placeholder for result handling
+                              return (
+                                <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
+                                </div>
+                              );
+                            }
+
+                            // Handle Double Check
+                            if (toolName === 'double-check') {
+                              if (!('result' in toolInvocation)) {
+                                return (
+                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
+                                    <Badge variant="outline" className="text-xs font-normal items-center">
+                                      <span className="mr-2 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
+                                      Double checking...
+                                    </Badge>
+                                  </div>
+                                );
+                              }
+                              // Placeholder for result handling
+                              return (
+                                <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
+                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
+                                </div>
+                              );
+                            }
+
+                            // Handle Other/Unknown Tools (Generic Placeholder)
                             if (!('result' in toolInvocation)) {
                               return (
                                 <div key={`${m.id}-tool-${toolCallId}`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
@@ -352,7 +414,10 @@ export default function Chat() {
               </div>
             ))
           ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">Start chatting below!</div>
+            <div className="flex flex-col space-y-4 h-full items-center justify-center text-muted-foreground">
+              <h1 className='text-4xl'>Welcome!</h1>
+              <p className='font-mono lowercase'>What can I help you learn?</p>
+            </div>
           )}
           <div ref={messagesEndRef} />
         </div>

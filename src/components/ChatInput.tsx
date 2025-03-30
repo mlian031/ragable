@@ -1,17 +1,25 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Ensure useState is imported
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added
+import { MemoizedMarkdown } from "@/components/memoized-markdown"; // Added
 import {
   SendHorizontal,
   Mic,
   ImagePlus,
-  Sparkles,
   Paperclip,
   Maximize2,
+  FlaskConical, // Added
+  LineChart,    // Added
+  CheckCheck,   // Added
+  Globe,        // Added
+  Code2,        // Added
+  TerminalSquare,
+  Terminal, // Added
 } from 'lucide-react';
 import {
   Dialog,
@@ -53,6 +61,7 @@ export function ChatInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('write'); // Added state for tabs
 
   // Focus input field on mount
   useEffect(() => {
@@ -70,13 +79,17 @@ export function ChatInput({
 
   // Get available modes and details of active ones
   const availableModes = getAllChatModes();
+  // Filter modes for the icon toggles (only keep search and code gen)
+  const iconToggleModes = availableModes.filter(mode =>
+    mode.id === 'FORCE_SEARCH' || mode.id === 'CODE_GENERATION'
+  );
   const currentActiveModesDetails = Array.from(activeModes)
     .map(getChatModeById)
     .filter((mode): mode is ChatMode => mode !== undefined); // Type guard
 
   return (
     <>
-      <div className="sticky bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border/40 py-4">
+      <div className="sticky bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border border-border/40 rounded-xl py-4">
         <div className="container max-w-4xl mx-auto px-4">
           <form
             // Pass activeModes array in main submit
@@ -89,39 +102,34 @@ export function ChatInput({
             )}>
               {/* Dynamic Indicator Pills */}
               {currentActiveModesDetails.length > 0 && (
-                <div className="px-3 pt-2 flex flex-wrap gap-1"> {/* Use flex-wrap for multiple badges */}
-                  {currentActiveModesDetails.map((mode) => (
-                    <Badge
-                      key={mode.id}
-                      variant="outline"
-                      className="py-1 px-2 text-xs font-normal bg-background border-primary/50 text-primary flex items-center"
-                    >
-                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5 shrink-0"></span>
-                      {mode.label}
-                    </Badge>
-                  ))}
+                 <div className="px-3 pt-2 flex flex-wrap gap-1"> {/* Use flex-wrap for multiple badges */}
+                   {currentActiveModesDetails.map((mode) => {
+                     // Determine dot color based on mode ID
+                     let dotColorClass = 'bg-gray-500'; // Default
+                     if (mode.id === 'FORCE_SEARCH') dotColorClass = 'bg-blue-500';
+                     else if (mode.id === 'CODE_GENERATION') dotColorClass = 'bg-green-500';
+                      // Use uppercase IDs for color assignment
+                      else if (mode.id === 'CHEM_VISUALIZER') dotColorClass = 'bg-purple-500';
+                      else if (mode.id === 'PLOT_FUNCTION') dotColorClass = 'bg-orange-500';
+                      else if (mode.id === 'DOUBLE_CHECK') dotColorClass = 'bg-yellow-500';
+
+                      return (
+                        <Badge
+                         key={mode.id}
+                         variant="outline"
+                         // Removed explicit text/border color, rely on default outline variant
+                         className="py-1 px-2 text-xs font-normal bg-background flex items-center"
+                       >
+                         <span className={`inline-block w-2 h-2 ${dotColorClass} rounded-full mr-1.5 shrink-0`}></span>
+                         {mode.label}
+                       </Badge>
+                     );
+                   })}
                 </div>
               )}
               {/* Added conditional top padding/border if badges are shown */}
+              {/* REMOVED Icon Toggle Section */}
               <div className={cn("flex items-center px-2 md:px-3", currentActiveModesDetails.length > 0 && "pt-2 mt-2 border-t border-border/30")}>
-                {/* Dynamic Mode Toggles */}
-                {availableModes.map((mode) => {
-                  const Icon = mode.icon; // Get the icon component
-                  return (
-                    <Toggle
-                      key={mode.id}
-                      size="sm"
-                      pressed={activeModes.has(mode.id)}
-                      onPressedChange={() => toggleChatMode(mode.id)}
-                      disabled={isLoading}
-                      aria-label={`Toggle ${mode.label}`}
-                      className="h-9 w-9 rounded-full data-[state=on]:bg-primary data-[state=on]:text-primary-foreground hover:bg-accent hover:text-accent-foreground data-[state=on]:hover:bg-primary/90 shrink-0"
-                    >
-                      <Icon className="h-4 w-4" />
-                    </Toggle>
-                  );
-                })}
-
                 <div className="flex-1 relative">
                   <Input
                     ref={inputRef}
@@ -207,14 +215,73 @@ export function ChatInput({
                   </Button>
                 </div>
               </div>
-              
-              <div className="border-t border-border/30 px-3 py-1.5 flex items-center">
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-primary/70" />
-                  <span className="text-xs text-muted-foreground">
-                    AI can make mistakes. Consider checking important information.
-                  </span>
-                </div>
+
+              {/* Tool Toggle Badges - Now includes ALL modes */}
+              <div className="border-t border-border/30 px-3 py-2 flex flex-wrap items-center gap-2">
+                 <span className="text-xs text-muted-foreground mr-2">Enable Modes:</span>
+                 {/* Web Search */}
+                 <Badge
+                   variant={activeModes.has('FORCE_SEARCH') ? "default" : "outline"}
+                   className={cn(
+                     "text-xs font-normal items-center cursor-pointer transition-colors",
+                     !activeModes.has('FORCE_SEARCH') && "hover:text-primary hover:border-primary/50"
+                   )}
+                   onClick={() => toggleChatMode('FORCE_SEARCH')}
+                 >
+                   <Globe className="mr-1 h-3 w-3" />
+                   Web Search
+                 </Badge>
+                 {/* Code Generation */}
+                 <Badge
+                   variant={activeModes.has('CODE_GENERATION') ? "default" : "outline"}
+                   className={cn(
+                     "text-xs font-normal items-center cursor-pointer transition-colors",
+                     !activeModes.has('CODE_GENERATION') && "hover:text-primary hover:border-primary/50"
+                   )}
+                   onClick={() => toggleChatMode('CODE_GENERATION')}
+                 >
+                   <Terminal className="mr-1 h-3 w-3" />
+                   Code Generation
+                 </Badge>
+                 {/* Chemistry Visualizer */}
+                 <Badge
+                   variant={activeModes.has('CHEM_VISUALIZER') ? "default" : "outline"}
+                    className={cn(
+                      "text-xs font-normal items-center cursor-pointer transition-colors",
+                      !activeModes.has('CHEM_VISUALIZER') && "hover:text-primary hover:border-primary/50"
+                    )}
+                    onClick={() => toggleChatMode('CHEM_VISUALIZER')}
+                  >
+                    <FlaskConical className="mr-1 h-3 w-3" />
+                    Chemistry
+                 </Badge>
+                  {/* Plot Function - Use uppercase ID */}
+                  <Badge
+                    variant={activeModes.has('PLOT_FUNCTION') ? "default" : "outline"}
+                    className={cn(
+                      "text-xs font-normal items-center cursor-pointer transition-colors",
+                      !activeModes.has('PLOT_FUNCTION') && "hover:text-primary hover:border-primary/50"
+                    )}
+                    onClick={() => toggleChatMode('PLOT_FUNCTION')}
+                  >
+                    <LineChart className="mr-1 h-3 w-3" />
+                    Plot
+                 </Badge>
+                  {/* Double Check - Use uppercase ID */}
+                  <Badge
+                    variant={activeModes.has('DOUBLE_CHECK') ? "default" : "outline"}
+                    className={cn(
+                      "text-xs font-normal items-center cursor-pointer transition-colors",
+                      !activeModes.has('DOUBLE_CHECK') && "hover:text-primary hover:border-primary/50"
+                    )}
+                    onClick={() => toggleChatMode('DOUBLE_CHECK')}
+                  >
+                    <CheckCheck className="mr-1 h-3 w-3" />
+                    Double Check
+                 </Badge>
+                 <p className="text-xs text-muted-foreground/80 mt-1.5 w-full">
+                   Note: If multiple tools are enabled, the AI might not use all of them unless specifically requested to.
+                 </p>
               </div>
             </div>
           </form>
@@ -223,28 +290,56 @@ export function ChatInput({
 
       {/* Fullscreen Dialog */}
       <Dialog open={isFullscreenOpen} onOpenChange={setIsFullscreenOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        {/* Increased max-width and added height/flex for better fullscreen feel */}
+        <DialogContent className="max-w-6xl sm:max-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Compose your message</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleFullscreenSubmit} className="space-y-4">
-            <Textarea
-              value={input}
-              onChange={handleInputChange}
-              placeholder={placeholder}
-              disabled={isLoading}
-              className="min-h-[200px] p-4 resize-none"
-              autoFocus
-            />
-            <DialogFooter>
+          {/* Form now wraps Tabs and Footer */}
+          <form onSubmit={handleFullscreenSubmit} className="flex flex-col flex-grow space-y-4 overflow-hidden">
+            <Tabs defaultValue="write" value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-grow overflow-hidden">
+              <TabsList className="mb-2 self-start shrink-0">
+                <TabsTrigger value="write">Write</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+              </TabsList>
+
+              {/* Write Tab */}
+              <TabsContent value="write" className="flex-grow flex flex-col outline-none overflow-hidden">
+                <Textarea
+                  value={input}
+                  onChange={handleInputChange}
+                  placeholder={placeholder}
+                  disabled={isLoading}
+                  // Adjusted styling: flex-grow for height, added border/rounded
+                  className="flex-grow resize-none p-4 border rounded-md focus-visible:ring-1 focus-visible:ring-ring"
+                  autoFocus // Keep autoFocus here
+                  rows={10}
+                />
+                {/* Character Count */}
+                <p className="text-xs text-muted-foreground text-right mt-1 pr-1 shrink-0">
+                  {input.length} / 4000 {/* Example limit */}
+                </p>
+              </TabsContent>
+
+              {/* Preview Tab */}
+              <TabsContent value="preview" className="flex-grow outline-none overflow-auto">
+                 {/* Added styling wrapper: prose for markdown styles, border, padding, overflow */}
+                 <div className="prose dark:prose-invert p-4 border rounded-md min-h-[200px]">
+                   <MemoizedMarkdown content={input || "Nothing to preview..."} id="fullscreen-preview" />
+                 </div>
+              </TabsContent>
+            </Tabs>
+
+            {/* Footer moved outside Tabs but inside Form */}
+            <DialogFooter className="shrink-0">
               <Button
-                type="button" 
+                type="button"
                 variant="outline"
                 onClick={() => setIsFullscreenOpen(false)}
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
                 type="submit"
                 disabled={isLoading || !input.trim()}
                 className="gap-2"
