@@ -82,6 +82,7 @@ export function ChatInput({
   setMessages,
 }: ChatInputProps) {
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null); // Add ref for the form
   const inputRef = useRef<HTMLTextAreaElement>(null); // Changed from HTMLInputElement
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -218,12 +219,18 @@ export function ChatInput({
 
     // Clear files and input after successful submission attempt
     setSelectedFiles([]);
-    // Note: Input clearing is handled by the useChat hook, no need to clear here
+    // Note: Input clearing is handled by the useChat hook
+    setSelectedFiles([]);
     if (isFullscreenOpen) {
       setIsFullscreenOpen(false); // Close fullscreen if open
     }
+    // Reset textarea height after submission
+    if (inputRef.current) {
+      inputRef.current.style.height = 'inherit'; // Reset height to default based on rows={1}
+      inputRef.current.style.overflowY = 'hidden'; // Ensure scrollbar is hidden again
+    }
 
-  }, [selectedFiles, activeModes, originalHandleSubmit, toast, isFullscreenOpen, input, setMessages]); // Keep setMessages dependency
+  }, [selectedFiles, activeModes, originalHandleSubmit, toast, isFullscreenOpen, setMessages, inputRef]); // Added inputRef dependency
 
 
   // Get available modes and details of active ones
@@ -238,6 +245,17 @@ export function ChatInput({
 
   // Determine if submit button should be disabled
   const isSubmitDisabled = isLoading || (!input.trim() && selectedFiles.length === 0);
+
+  // Handle keydown for Cmd/Ctrl+Enter
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault(); // Prevent newline
+      if (!isSubmitDisabled && formRef.current) {
+        // Trigger form submission
+        formRef.current.requestSubmit();
+      }
+    }
+  };
 
   return (
     <>
@@ -254,8 +272,8 @@ export function ChatInput({
 
       <div className="sticky bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border border-border/40 rounded-xl py-4">
         <div className="container max-w-4xl mx-auto px-4">
-          {/* Use the wrapper handleSubmit for the main form */}
-          <form onSubmit={handleSubmitWithFiles} className="relative">
+          {/* Use the wrapper handleSubmit for the main form, add ref */}
+          <form ref={formRef} onSubmit={handleSubmitWithFiles} className="relative">
             <div className={cn(
               "rounded-xl border bg-background transition-all duration-300 shadow-sm flex flex-col", // Added flex flex-col
               isFocused ? "ring-2 ring-primary/20 border-primary/30" : "border-border/60",
@@ -302,6 +320,7 @@ export function ChatInput({
                       className="w-full border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-3 min-h-[48px] rounded-none text-sm bg-transparent resize-none overflow-y-hidden" // Keep w-full here for inner element
                       value={input}
                       placeholder={placeholder}
+                      onKeyDown={handleKeyDown} // Add keydown handler
                       onChange={(e) => {
                         handleInputChange(e);
                         // Auto-resize logic
@@ -450,6 +469,10 @@ export function ChatInput({
                  })}
                  <p className="text-xs text-muted-foreground/80 mt-1.5 w-full">
                    Note: If multiple tools are enabled, the AI might not use all of them unless specifically requested to.
+                 </p>
+                 {/* Add Cmd+Enter note */}
+                 <p className="text-xs text-muted-foreground lowercase mt-1 w-full font-mono">
+                   Press<span className='text-primary'>{' '}cmd + enter{' '}</span>to send a message and <span className='text-primary'>{' '}enter{' '}</span> to add a new line.
                  </p>
               </div>
             </div>
