@@ -1,84 +1,81 @@
-# Plan: Agentic Chat App with Search Grounding & Citations
+# Plan: Agentic Chat App with Tools, File Handling, and Refactored UI
 
-This plan outlines the steps to build a chat application using Vercel's AI SDK, Google Vertex AI (Gemini), and Next.js, featuring search grounding and citation formatting with Shadcn UI components.
+This document describes the current architecture and features of the chat application built using Vercel's AI SDK, Google Vertex AI (Gemini), and Next.js with Shadcn UI components. The application has been refactored for modularity, maintainability, and adherence to SOLID principles.
 
-**Assumptions:**
+**Core Features:**
 
-1.  **Project Integration:** Build within the existing Next.js project at `/Users/mikeliang/Documents/ragable-v2`.
-2.  **Initial Model:** Start with `gemini-2.0-flash-001`.
-3.  **Authentication:** Use `google-credentials.json` via the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
-4.  **Runtime:** Standard Node.js backend environment.
-5.  **Dependencies:** Shadcn UI components are already set up or can be added using the Shadcn CLI.
+1.  **AI Chat:** Leverages Gemini Pro via `@ai-sdk/google-vertex` for conversational AI.
+2.  **Tool Usage:** Supports AI-driven tools:
+    *   `webSearch`: Uses a grounded Gemini Flash model to search the web, resolve source URLs, and return structured results (context, sources).
+    *   `displayCode`: Allows the AI to request formatted code block rendering in the UI.
+    *   (Placeholders for potential future tools like chemistry visualization, plotting, double-checking).
+3.  **File Handling:** Users can attach files (images, text) via the chat input, which are processed by the backend and sent to the model. Attachments are visually indicated by badges on user messages.
+4.  **Chat Modes:** Supports different chat modes (defined in `src/config/chat-modes.ts`) that modify the system prompt sent to the AI.
+5.  **Message Lifecycle:**
+    *   **Display:** Renders messages with dedicated components for text, tool invocations (including loading/error states), and attachments.
+    *   **Actions:** Provides actions on messages (hover): Edit (user), Copy (user/assistant), Regenerate (assistant).
+    *   **Token Usage:** Displays token count for completed assistant messages.
+6.  **Refactored UI:** The frontend (`src/app/chat/page.tsx`) is structured with distinct components for better separation of concerns:
+    *   `ChatInput`: Handles user text input and file attachments.
+    *   `ChatMessageActions`: Renders action buttons (Edit, Copy, Regenerate).
+    *   `MessagePartRenderer`: Handles rendering of different message content types (text, tool invocations).
+    *   `AttachmentBadges`: Displays badges for file attachments on user messages.
+7.  **Refactored Backend:** The API route (`src/app/api/chat/route.ts`) acts as an orchestrator:
+    *   Uses `fileProcessor.ts` to handle incoming files.
+    *   Uses `promptHelper.ts` to build the system prompt based on active modes.
+    *   Imports and provides tool definitions (`webSearchTool.ts`, `displayCodeTool.ts`) to the AI SDK.
+8.  **Utilities:** Includes helper functions for class name merging (`cn`), filename truncation, citation formatting (basic), and URL resolution.
 
-**Detailed Plan:**
-
-1.  **Environment Setup & Dependencies:**
-    *   Create or update a `.env.local` file in the project root (`/Users/mikeliang/Documents/ragable-v2`) with Google Cloud credentials:
-        ```.env.local
-        GOOGLE_APPLICATION_CREDENTIALS=./google-credentials.json # Adjust path if needed
-        GOOGLE_VERTEX_PROJECT=your-gcp-project-id
-        GOOGLE_VERTEX_LOCATION=your-vertex-region # e.g., us-central1
-        ```
-    *   Install required packages using pnpm:
-        ```bash
-        pnpm add @ai-sdk/google-vertex @ai-sdk/react ai react-markdown marked
-        # Consider adding later for robust citation formatting:
-        # pnpm add citation-js
-        ```
-
-2.  **Backend API Route (`src/app/api/chat/route.ts`):**
-    *   Create the file `src/app/api/chat/route.ts`.
-    *   Implement the API route handler:
-        *   Import `streamText`, `CoreMessage`, `GoogleGenerativeAIProviderMetadata`.
-        *   Import `vertex` from `@ai-sdk/google-vertex`.
-        *   Initialize the Vertex model with search grounding enabled: `vertex('gemini-2.0-flash-001', { useSearchGrounding: true })`.
-        *   Enable data streaming: `experimental_streamData: true`.
-        *   Use `result.toDataStream({ onFinal(...) })` to pipe grounding metadata (`result.providerMetadata?.google?.groundingMetadata`) into the data stream.
-
-3.  **Memoized Markdown Component (`src/components/memoized-markdown.tsx`):**
-    *   Create the file `src/components/memoized-markdown.tsx`.
-    *   Implement the memoized Markdown component using `react-markdown` and `marked` based on the Vercel AI SDK cookbook recipe ([Markdown Chatbot with Memoization](https://sdk.vercel.ai/cookbook/next/markdown-chatbot-with-memoization)).
-
-4.  **Source Display & Citation Component (`src/components/SourceDisplay.tsx`):**
-    *   Create the file `src/components/SourceDisplay.tsx`.
-    *   Define the component structure:
-        *   Accept `groundingMetadata` as a prop.
-        *   Use `useState` to manage the selected citation style (`'mla'`, `'apa'`, `'chicago'`).
-        *   Use Shadcn UI components: `Card`, `Select` (with `SelectTrigger`, `SelectContent`, `SelectItem`).
-        *   Render relevant data from `groundingMetadata`.
-        *   Implement basic citation formatting logic (can be enhanced later).
-
-5.  **Frontend Chat Interface (`src/app/page.tsx`):**
-    *   Update `src/app/page.tsx`.
-    *   Import and use the `useChat` hook from `@ai-sdk/react`, pointing to `/api/chat`.
-    *   Import `MemoizedMarkdown` and `SourceDisplay`.
-    *   Modify the message rendering loop:
-        *   Use `MemoizedMarkdown` for `message.content`.
-        *   Check if `message.role === 'assistant'` and `message.data?.groundingMetadata` exists.
-        *   If metadata is present, render `<SourceDisplay groundingMetadata={message.data.groundingMetadata} />`.
-
-**Mermaid Diagram:**
+**Mermaid Diagram (Updated):**
 
 ```mermaid
 graph TD
-    subgraph Browser
-        A[User Input] --> B(page.tsx);
-        B -- useChat Hook --> C[POST /api/chat];
-        B -- Renders Chat --> D[Messages List];
-        D -- Renders Content --> E(memoized-markdown.tsx);
-        D -- Renders Sources --> F(SourceDisplay.tsx);
-        F -- Uses --> G[Shadcn Card, Select, etc.];
-        F -- Contains --> H{Citation Formatting Logic};
-        G -- User Selects Style --> F;
+    subgraph "Browser (Client: Next.js/React)"
+        UserInput[User Input Text/Files] --> CI(ChatInput.tsx);
+        CI -- onSubmit --> CP(ChatPage: page.tsx);
+        CP -- useChat Hook --> API[POST /api/chat];
+
+        subgraph ChatDisplay
+            CP -- Renders --> MsgWrapper[Message Wrapper];
+            MsgWrapper -- Contains --> Role[Role Indicator];
+            MsgWrapper -- Contains --> CMA(ChatMessageActions.tsx);
+            MsgWrapper -- Contains --> MPR(MessagePartRenderer.tsx);
+            MsgWrapper -- Contains --> AB(AttachmentBadges.tsx);
+            MsgWrapper -- Contains --> TU[Token Usage Badge];
+
+            MPR -- Renders --> MD(MemoizedMarkdown.tsx);
+            MPR -- Renders --> SR(SearchResult.tsx);
+            MPR -- Renders --> CB(CodeBlock.tsx);
+            MPR -- Renders --> ToolLoad[Tool Loading/Error States];
+
+            CMA -- User Actions --> CP;
+        end
+
+        API -- Stream Response --> CP;
+        CP -- Updates State --> ChatDisplay;
     end
 
-    subgraph Server
-        C --> I(route.ts);
-        I -- streamText --> J[Vertex Model (useSearchGrounding: true)];
-        J -- Text Stream --> I;
-        J -- Grounding Metadata --> I;
-        I -- experimental_streamData --> C;
+    subgraph "Server (Next.js API Route)"
+        API --> Route(route.ts);
+        Route -- Uses --> FP(fileProcessor.ts);
+        Route -- Uses --> PH(promptHelper.ts);
+        Route -- Uses --> Tools[Assembled Tools];
+        Tools -- Includes --> WST(webSearchTool.ts);
+        Tools -- Includes --> DCT(displayCodeTool.ts);
+
+        Route -- streamText --> Vertex[Vertex AI SDK Gemini Pro];
+        Vertex -- Tool Calls --> Route;
+        Route -- Executes Tool --> WST/DCT;
+        WST -- generateText --> VertexFlash[Vertex AI SDK Gemini Flash Grounded];
+        WST -- Uses --> Utils(utils.ts - resolveSourceUrls);
+        WST/DCT -- Tool Results --> Route;
+        Route -- Sends Results --> Vertex;
+
+        Vertex -- Text/Tool Stream --> Route;
+        Route -- Streams Data --> API;
     end
 
-    style J fill:#f9f,stroke:#333,stroke-width:2px
-    style F fill:#ccf,stroke:#333,stroke-width:2px
+    style Vertex fill:#f9f,stroke:#333,stroke-width:2px
+    style VertexFlash fill:#fdf,stroke:#333,stroke-width:1px
+    style MPR fill:#ccf,stroke:#333,stroke-width:2px
+    style Route fill:#cfc,stroke:#333,stroke-width:2px

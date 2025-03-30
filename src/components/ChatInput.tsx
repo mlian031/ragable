@@ -17,8 +17,6 @@ import {
   LineChart,    // Added
   CheckCheck,   // Added
   Globe,        // Added
-  Code2,        // Added
-  TerminalSquare,
   Terminal, // Added
   X, // Added for removing files
   FileText, // Added for PDF icon
@@ -79,13 +77,13 @@ export function ChatInput({
   handleSubmit: originalHandleSubmit, // Rename original prop
   isLoading,
   placeholder = 'Ask about anything...',
-  activeModes, // Destructure new prop
-  toggleChatMode, // Destructure new prop
-  setMessages, // Destructure setMessages
+  activeModes,
+  toggleChatMode,
+  setMessages,
 }: ChatInputProps) {
-  const { toast } = useToast(); // Initialize toast
-  const inputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for hidden file input
+  const { toast } = useToast();
+  const inputRef = useRef<HTMLTextAreaElement>(null); // Changed from HTMLInputElement
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('write');
@@ -294,19 +292,31 @@ export function ChatInput({
                   "flex items-center px-2 md:px-3",
                   currentActiveModesDetails.length > 0 && "pt-2 mt-2 border-t border-border/30" // Add border if badges shown
                 )}>
-                  <div className="flex-1 relative">
-                    <Input
+                  {/* Use flex items-end gap-2 for the main row, add w-full */}
+                  <div className="flex items-end gap-2 w-full">
+                    {/* Textarea wrapper: Use grow, remove min-w-full */}
+                    <div className="grow">
+                    <Textarea
                       ref={inputRef}
-                      className="border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-5 h-12 rounded-none text-sm bg-transparent pr-20" // Added padding-right for buttons
+                      rows={1} // Start with a single row
+                      className="w-full border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-3 min-h-[48px] rounded-none text-sm bg-transparent resize-none overflow-y-hidden" // Keep w-full here for inner element
                       value={input}
                       placeholder={placeholder}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        handleInputChange(e);
+                        // Auto-resize logic
+                        e.target.style.height = 'inherit'; // Reset height
+                        e.target.style.height = `${e.target.scrollHeight}px`; // Set to scroll height
+                        // Prevent excessive growth (optional, adjust max-height as needed)
+                        e.target.style.overflowY = e.target.scrollHeight > 200 ? 'auto' : 'hidden'; // Show scrollbar if very tall
+                      }}
                       disabled={isLoading}
                       onFocus={() => setIsFocused(true)}
                       onBlur={() => setIsFocused(false)}
                     />
-                    {/* Buttons absolutely positioned inside the input's relative container */}
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 items-center">
+                    </div>
+                   <div className="flex-none text-right">
+                   <div className="flex flex-row gap-1 items-center pb-[7px]">
                       {isLoading && (
                         <div className="flex space-x-1 items-center mr-1">
                           <div className="w-1.5 h-1.5 bg-gradient-to-r from-purple-300 via-blue-400 to-teal-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
@@ -361,6 +371,7 @@ export function ChatInput({
                         <SendHorizontal className="h-4 w-4" />
                       </Button>
                     </div>
+                   </div>
                   </div>
                 </div>
               </div>
