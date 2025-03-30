@@ -19,6 +19,12 @@ import { ChatModeBadges } from './ChatModeBadges'; // Import new component
 import { ChatModeToggles } from './ChatModeToggles'; // Import new component
 import { FullscreenInputModal } from './FullscreenInputModal'; // Import new component
 
+// Define LocalAttachmentInfo type - this will be used by the parent as well
+type LocalAttachmentInfo = {
+  name: string;
+  mimeType: string;
+};
+
 interface ChatInputProps {
   input: string;
   handleInputChange: (
@@ -27,10 +33,11 @@ interface ChatInputProps {
   handleSubmit: (
     e: React.FormEvent<HTMLFormElement>,
     // Pass generic data object, expecting activeModes and potentially files
-    options?: { data?: { activeModes?: string[]; files?: Array<{ name: string; mimeType: string; data: string }>; localAttachments?: Array<{ name: string; mimeType: string }> } } // Added localAttachments to options type
+    options?: { data?: { activeModes?: string[]; files?: Array<{ name: string; mimeType: string; data: string }> } } // Removed localAttachments from options type
   ) => void;
   isLoading: boolean;
   placeholder?: string;
+  onBeforeSubmit?: (attachments: LocalAttachmentInfo[]) => void; // Add optional callback
   // New props for dynamic modes
   activeModes: Set<string>;
   toggleChatMode: (modeId: string) => void;
@@ -46,6 +53,7 @@ export function ChatInput({
   activeModes,
   toggleChatMode,
   setMessages, // Keep setMessages if needed by originalHandleSubmit or other logic
+  onBeforeSubmit, // Destructure the new prop
 }: ChatInputProps) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -114,11 +122,16 @@ export function ChatInput({
       }
     }
 
+    // Call the callback before submitting, if provided
+    if (onBeforeSubmit && attachmentInfoArray.length > 0) {
+      onBeforeSubmit(attachmentInfoArray);
+    }
+
     const finalData = {
       ...options?.data,
       activeModes: Array.from(activeModes),
       ...(fileDataArray.length > 0 && { files: fileDataArray }),
-      ...(attachmentInfoArray.length > 0 && { localAttachments: attachmentInfoArray }),
+      // Removed localAttachments from here
     };
 
     originalHandleSubmit(e, { data: finalData });
@@ -133,7 +146,7 @@ export function ChatInput({
       inputRef.current.style.height = 'inherit';
       inputRef.current.style.overflowY = 'hidden';
     }
-  }, [selectedFiles, activeModes, originalHandleSubmit, toast, isModalOpen, setSelectedFiles, inputRef]); // Updated dependencies
+  }, [selectedFiles, activeModes, originalHandleSubmit, toast, isModalOpen, setSelectedFiles, inputRef, onBeforeSubmit]); // Added onBeforeSubmit dependency
 
   // Get available modes
   const availableModes = getAllChatModes();

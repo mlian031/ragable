@@ -27,9 +27,8 @@ interface AttachmentBadgesProps {
 export const AttachmentBadges: React.FC<AttachmentBadgesProps> = ({
   message,
 }) => {
-  // TODO: Update this logic if the AI SDK provides a standard way to access message attachments/files.
-  // Currently relies on the structure potentially added by ChatInput or similar upstream components.
-  const attachments = (message as any).experimental_customData?.attachments as
+  // Read attachments from the custom 'attachments' property added in chat/page.tsx
+  const attachments = (message as any).attachments as
     | AttachmentInfo[]
     | undefined;
 

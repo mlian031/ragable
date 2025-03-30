@@ -77,6 +77,8 @@ export default function Chat() {
   const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
   const [editedContent, setEditedContent] = React.useState<string>('');
   const [activeModes, setActiveModes] = React.useState<Set<string>>(new Set());
+  // State to hold attachments temporarily before adding to the message
+  const [pendingAttachments, setPendingAttachments] = React.useState<LocalAttachmentInfo[] | null>(null);
 
   // --- AI SDK Chat Hook ---
   const {
@@ -192,6 +194,11 @@ export default function Chat() {
     [toast], // Depends on toast
   );
 
+  /** Callback for ChatInput to pass attachments before submission */
+  const handleBeforeSubmit = React.useCallback((attachments: LocalAttachmentInfo[]) => {
+    setPendingAttachments(attachments);
+  }, []); // No dependencies, just sets state
+
   /** Regenerates the response for an assistant message. */
   const handleRegenerate = React.useCallback(
     (assistantMessageIndex: number) => {
@@ -237,8 +244,7 @@ export default function Chat() {
         ...options?.data, // Include any data from ChatInput (like files)
         activeModes: activeModeIds, // Add active modes
       };
-      // Remove localAttachments if it was passed, as backend expects 'files'
-      delete backendData.localAttachments;
+      // localAttachments is no longer passed from ChatInput in the data object
 
       console.log('Submitting with data:', backendData); // Debug log
 
@@ -255,6 +261,31 @@ export default function Chat() {
   React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]); // Dependency on the number of messages
+
+  // Effect to add pending attachments to the last user message
+  React.useEffect(() => {
+    if (pendingAttachments && messages.length > 0) {
+      const lastMessageIndex = messages.length - 1;
+      const lastMessage = messages[lastMessageIndex];
+
+      // Check if it's a user message and doesn't already have attachments property
+      if (lastMessage.role === 'user' && !(lastMessage as any).attachments) {
+        const updatedMessage = {
+          ...lastMessage,
+          attachments: pendingAttachments, // Add the attachments
+        };
+
+        // Update the messages array
+        setMessages((currentMessages) => [
+          ...currentMessages.slice(0, lastMessageIndex),
+          updatedMessage,
+        ]);
+
+        // Clear pending attachments
+        setPendingAttachments(null);
+      }
+    }
+  }, [messages, pendingAttachments, setMessages]); // Dependencies
 
   // --- Render Logic ---
 
@@ -370,6 +401,7 @@ export default function Chat() {
           activeModes={activeModes}
           toggleChatMode={handleToggleChatMode} // Use renamed handler
           setMessages={setMessages} // Pass setMessages down
+          onBeforeSubmit={handleBeforeSubmit} // Pass the callback
         />
       </div>
     </TooltipProvider>
