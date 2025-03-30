@@ -1,87 +1,119 @@
 'use client';
 
-import { useChat, type Message } from '@ai-sdk/react'; // Base import
-import { MemoizedMarkdown } from '@/components/memoized-markdown';
-import { Textarea } from '@/components/ui/textarea';
+import * as React from 'react';
+import { useChat, type Message } from '@ai-sdk/react';
+import {
+  Copy,
+  Cpu,
+  Edit,
+  FileText,
+  Image as ImageIcon,
+  RotateCw,
+} from 'lucide-react';
+
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useEffect, useRef, useState, useCallback } from 'react'; // React hooks - Added useCallback
-import { SearchResult, type Source as AppSource } from '@/components/SearchResult';
-import { useToast } from '@/components/ui/use-toast';
-import { Edit, Copy, RotateCw, Cpu, FileText, Image as ImageIcon } from 'lucide-react'; // Icons - Added Cpu, FileText, ImageIcon
-import { cn, truncateFileName } from '@/lib/utils'; // Import cn and truncateFileName
+import { Textarea } from '@/components/ui/textarea';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import {
-  TooltipProvider,
-} from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { useToast } from '@/components/ui/use-toast';
+import { AttachmentBadges } from '@/components/AttachmentBadges'; // Import the new component
 import { ChatInput } from '@/components/ChatInput';
-import { CodeBlock } from '@/components/code-block'; // Import CodeBlock component
-import { Badge } from '@/components/ui/badge'; // Import Badge component
+import { ChatMessageActions } from '@/components/ChatMessageActions';
+import { CodeBlock } from '@/components/code-block'; // Keep for potential direct use? (Maybe remove later if only in MessagePartRenderer)
+import { MemoizedMarkdown } from '@/components/memoized-markdown'; // Keep for potential direct use? (Maybe remove later if only in MessagePartRenderer)
+import { MessagePartRenderer } from '@/components/MessagePartRenderer';
+import { SearchResult, type Source as AppSource } from '@/components/SearchResult'; // Keep for potential direct use? (Maybe remove later if only in MessagePartRenderer)
+import { cn, truncateFileName } from '@/lib/utils';
 
-// Helper function to extract text from a message
+// --- Type Definitions ---
+
+// Removed SdkSource as it's handled in MessagePartRenderer
+
+/** Represents attachment information stored locally or passed from ChatInput. */
+type LocalAttachmentInfo = {
+  name: string;
+  mimeType: string;
+};
+
+// --- Helper Functions ---
+
+/**
+ * Extracts the primary text content from a message object.
+ * @param message - The message object.
+ * @returns The text content, or an empty string if none is found.
+ */
 function getMessageText(message: Message): string {
-  if (!message.parts) return '';
-  const textPart = message.parts.find(part => part.type === 'text');
-  if (textPart && 'text' in textPart) {
+  if (!message.parts) {
+    return typeof message.content === 'string' ? message.content : ''; // Fallback for simple string content
+  }
+  const textPart = message.parts.find((part) => part.type === 'text');
+  // Ensure textPart is not null and has a 'text' property
+  if (textPart && 'text' in textPart && typeof textPart.text === 'string') {
     return textPart.text;
   }
   return '';
 }
 
-// Define types for tool results and sources within the component scope
-type SearchResultData = {
-  context?: string;
-  sources?: Array<{ url?: string; title?: string; snippet?: string }>;
-};
-type SdkSource = {
-  url?: string;
-  title?: string;
-  snippet?: string;
-};
+// --- Chat Component ---
 
-// Type for the result of the displayCode tool
-type CodeBlockData = {
-  language: string;
-  filename?: string;
-  code?: string;
-  tabs?: Array<{
-    name: string;
-    code: string;
-    language?: string;
-  }>;
-};
-
+/**
+ * The main chat interface component.
+ * Handles message display, user input, editing, regeneration, and tool result rendering.
+ */
 export default function Chat() {
   const { toast } = useToast();
-  // State to store token usage per message ID
-  const [tokenUsage, setTokenUsage] = useState<Map<string, number>>(new Map());
+  const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
 
-  const { messages: rawMessages, input, handleInputChange, handleSubmit: originalHandleSubmit, isLoading, setMessages, reload } = useChat({
+  // --- State ---
+  const [tokenUsage, setTokenUsage] = React.useState<Map<string, number>>(
+    new Map(),
+  );
+  const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
+  const [editedContent, setEditedContent] = React.useState<string>('');
+  const [activeModes, setActiveModes] = React.useState<Set<string>>(new Set());
+
+  // --- AI SDK Chat Hook ---
+  const {
+    messages: rawMessages, // Renamed to avoid conflict with processed messages
+    input,
+    handleInputChange,
+    handleSubmit: originalHandleSubmit,
+    isLoading,
+    setMessages,
+    reload,
+  } = useChat({
     api: '/api/chat',
-    // Add maxSteps if needed, e.g., maxSteps: 2,
+    // maxSteps: 2, // Example: Allow multiple tool calls if needed
     onFinish: (message, options) => {
-      console.log("Stream finished. Final assistant message:", message);
+      console.log('Stream finished. Final assistant message:', message);
       // Store token usage when the stream for an assistant message finishes
       if (message.role === 'assistant' && options?.usage?.totalTokens) {
-        console.log(`Storing token usage for message ${message.id}: ${options.usage.totalTokens}`);
-        setTokenUsage(prev => new Map(prev).set(message.id, options.usage.totalTokens));
+        console.log(
+          `Storing token usage for message ${message.id}: ${options.usage.totalTokens}`,
+        );
+        setTokenUsage((prev) =>
+          new Map(prev).set(message.id, options.usage.totalTokens!),
+        );
       } else if (message.role === 'assistant') {
         console.warn(`Token usage data not available for message ${message.id}`);
       }
     },
   });
 
-  const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [editedContent, setEditedContent] = useState<string>('');
-  const [activeModes, setActiveModes] = useState<Set<string>>(new Set());
+  // Use rawMessages directly as the source of truth
+  const messages: Message[] = rawMessages;
 
-  const toggleChatMode = (modeId: string) => {
-    setActiveModes(prevModes => {
+  // --- Event Handlers ---
+
+  /** Toggles the active state of a chat mode. */
+  const handleToggleChatMode = React.useCallback((modeId: string) => {
+    setActiveModes((prevModes) => {
       const newModes = new Set(prevModes);
       if (newModes.has(modeId)) {
         newModes.delete(modeId);
@@ -90,385 +122,253 @@ export default function Chat() {
       }
       return newModes;
     });
-  };
+  }, []); // Empty dependency array as it only depends on setActiveModes
 
-  function handleEditStart(index: number) {
-    if (messages[index]?.role === 'user') {
-      setEditingIndex(index);
-      setEditedContent(getMessageText(messages[index]));
-    }
-  }
+  /** Starts editing a user message. */
+  const handleEditStart = React.useCallback(
+    (index: number) => {
+      if (messages[index]?.role === 'user') {
+        setEditingIndex(index);
+        setEditedContent(getMessageText(messages[index]));
+      }
+    },
+    [messages], // Depends on the messages array
+  );
 
-  function handleCancelEdit() {
+  /** Cancels the current message edit. */
+  const handleCancelEdit = React.useCallback(() => {
     setEditingIndex(null);
     setEditedContent('');
-  }
+  }, []); // No dependencies
 
-  async function handleSaveEdit() {
+  /** Saves the edited message and triggers a reload. */
+  const handleSaveEdit = React.useCallback(async () => {
     if (editingIndex === null || !editedContent.trim()) return;
-    const editedMessage = {
-      ...messages[editingIndex],
-      parts: [{ type: 'text' as const, text: editedContent.trim() }]
+
+    const originalMessage = messages[editingIndex];
+    if (!originalMessage) return; // Should not happen if editingIndex is valid
+
+    // Create the edited message with only the text part
+    const editedMessage: Message = {
+      ...originalMessage, // Retain id, role, createdAt etc.
+      content: editedContent.trim(), // Simple string content for user message edit
+      parts: undefined, // Clear parts if they existed
+      toolInvocations: undefined, // Clear tool invocations if they existed
+      // toolResult: undefined, // Removed: Property 'toolResult' does not exist on type 'Message'.
     };
+
+    // Create a new messages array up to the edited message
     const newMessages = [...messages.slice(0, editingIndex), editedMessage];
+
+    // Update the local state and trigger reload
     setMessages(newMessages);
     setEditingIndex(null);
     setEditedContent('');
-    reload();
-  }
+    reload(); // Reload will likely use the newMessages state
+  }, [editingIndex, editedContent, messages, setMessages, reload]); // Dependencies
 
-  function handleCopy(message: Message) {
-    const textToCopy = getMessageText(message);
-    if (!textToCopy) {
-      toast({ title: "Nothing to copy", variant: "destructive" });
-      return;
-    }
-    navigator.clipboard.writeText(textToCopy).then(() => {
-      toast({ title: "Copied to clipboard", duration: 2000 });
-    }).catch(err => {
-      toast({ title: "Copy failed", description: "Could not copy message to clipboard.", variant: "destructive" });
-    });
-  }
+  /** Copies the text content of a message to the clipboard. */
+  const handleCopy = React.useCallback(
+    (message: Message) => {
+      const textToCopy = getMessageText(message);
+      if (!textToCopy) {
+        toast({ title: 'Nothing to copy', variant: 'destructive' });
+        return;
+      }
+      navigator.clipboard
+        .writeText(textToCopy)
+        .then(() => {
+          toast({ title: 'Copied to clipboard', duration: 2000 });
+        })
+        .catch((err) => {
+          console.error('Copy failed:', err);
+          toast({
+            title: 'Copy failed',
+            description: 'Could not copy message to clipboard.',
+            variant: 'destructive',
+          });
+        });
+    },
+    [toast], // Depends on toast
+  );
 
-  function handleRegenerate(assistantMessageIndex: number) {
-    if (isLoading) return;
-    const userMessageIndex = assistantMessageIndex - 1;
-    if (userMessageIndex >= 0 && messages[userMessageIndex]?.role === 'user') {
-      const messagesToKeep = messages.slice(0, assistantMessageIndex);
-      setMessages(messagesToKeep);
-      reload();
-    } else {
-      toast({ title: "Regeneration failed", description: "Could not find the corresponding user message to regenerate from.", variant: "destructive" });
-    }
-  }
+  /** Regenerates the response for an assistant message. */
+  const handleRegenerate = React.useCallback(
+    (assistantMessageIndex: number) => {
+      if (isLoading) return;
+      const userMessageIndex = assistantMessageIndex - 1;
+      // Check if the previous message exists and is a user message
+      if (
+        userMessageIndex >= 0 &&
+        messages[userMessageIndex]?.role === 'user'
+      ) {
+        // Keep messages up to (but not including) the assistant message to regenerate
+        const messagesToKeep = messages.slice(0, assistantMessageIndex);
+        setMessages(messagesToKeep);
+        reload(); // Reload will use the truncated message list
+      } else {
+        toast({
+          title: 'Regeneration failed',
+          description:
+            'Could not find the corresponding user message to regenerate from.',
+          variant: 'destructive',
+        });
+      }
+    },
+    [isLoading, messages, setMessages, reload, toast], // Dependencies
+  );
 
-  // Type for attachment info passed from ChatInput and stored in local message
-  type LocalAttachmentInfo = {
-    name: string;
-    mimeType: string;
-  };
+  /** Wraps the original handleSubmit to include active modes and handle local attachments. */
+  const handleSubmitWrapper = React.useCallback(
+    (
+      e: React.FormEvent<HTMLFormElement>,
+      options?: {
+        data?: Record<string, any> & {
+          localAttachments?: LocalAttachmentInfo[];
+        };
+      },
+    ) => {
+      const activeModeIds = Array.from(activeModes);
+      // Files are now handled by the ChatInput component and passed in options.data.files
+      // We just need to ensure activeModes is included.
 
-  const handleSubmitWrapper = useCallback((
-    e: React.FormEvent<HTMLFormElement>,
-    options?: { data?: Record<string, any> & { localAttachments?: LocalAttachmentInfo[] } } // Expect localAttachments
-  ) => {
-    const activeModeIds = Array.from(activeModes);
-    const localAttachments = options?.data?.localAttachments ?? [];
+      // Prepare data for the actual backend submission
+      const backendData = {
+        ...options?.data, // Include any data from ChatInput (like files)
+        activeModes: activeModeIds, // Add active modes
+      };
+      // Remove localAttachments if it was passed, as backend expects 'files'
+      delete backendData.localAttachments;
 
-    // --- Removed manual local message addition ---
+      console.log('Submitting with data:', backendData); // Debug log
 
-    // Prepare data for the actual backend submission (remove localAttachments but keep it for the hook)
-    const backendData = { ...options?.data };
-    delete backendData.localAttachments; // Don't send this to the backend
+      originalHandleSubmit(e, {
+        data: backendData,
+      });
+    },
+    [activeModes, originalHandleSubmit], // Dependencies
+  );
 
-    originalHandleSubmit(e, {
-      data: { ...backendData, activeModes: activeModeIds }
-    });
-  }, [activeModes, input, originalHandleSubmit, setMessages]); // Added setMessages dependency
+  // --- Effects ---
 
-  useEffect(() => {
+  /** Scrolls to the bottom of the chat list when messages change. */
+  React.useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [rawMessages.length]); // <-- Dependency changed to length
+  }, [messages.length]); // Dependency on the number of messages
 
-  const messages: Message[] = rawMessages;
+  // --- Render Logic ---
 
   return (
     <TooltipProvider delayDuration={100}>
-      <div className="flex flex-col max-w-4xl mx-auto px-4 py-8 md:px-6 md:py-12 min-h-screen">
+      <div className="flex min-h-screen flex-col max-w-4xl mx-auto px-4 py-8 md:px-6 md:py-12">
+        {/* Chat Messages Area */}
         <div className="flex-grow overflow-y-auto mb-4 pb-24 w-full">
           {messages.length > 0 ? (
-            messages.map((m: Message, messageIndex: number) => (
-              <div key={m.id} className="flex flex-col py-4 relative group">
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center gap-1">
-                  {m.role === 'user' ? (
-                    <>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditStart(messageIndex)} title="Edit message" disabled={isLoading}>
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(m)} title="Copy message">
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleCopy(m)} title="Copy message">
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRegenerate(messageIndex)} title="Regenerate response" disabled={isLoading}>
-                        <RotateCw className="h-3 w-3" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+            messages.map((m, messageIndex) => (
+              <div key={m.id} className="relative flex flex-col py-4 group">
+                {/* Use ChatMessageActions Component */}
+                <ChatMessageActions
+                  message={m}
+                  messageIndex={messageIndex}
+                  isLoading={isLoading}
+                  onEdit={handleEditStart}
+                  onCopy={handleCopy}
+                  onRegenerate={handleRegenerate}
+                />
+
+                {/* Role Indicator */}
+                <div className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
                   <span>{m.role === 'user' ? 'You' : 'AI Assistant'}</span>
                 </div>
+
+                {/* Message Content Area */}
                 <div className="pl-0">
                   {editingIndex === messageIndex ? (
+                    // --- Editing View ---
                     <div className="space-y-2 py-2">
-                      <Textarea value={editedContent} onChange={(e) => setEditedContent(e.target.value)} className="w-full text-sm" rows={3} autoFocus />
+                      <Textarea
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        className="w-full text-sm"
+                        rows={3}
+                        autoFocus
+                      />
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={handleCancelEdit}>Cancel</Button>
-                        <Button size="sm" onClick={handleSaveEdit} disabled={isLoading || !editedContent.trim()}>Save & Submit</Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleCancelEdit}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSaveEdit}
+                          disabled={isLoading || !editedContent.trim()}
+                        >
+                          Save & Submit
+                        </Button>
                       </div>
                     </div>
                   ) : (
-                    <> {/* Wrapper Fragment */}
-                      <div className="prose prose-sm dark:prose-invert max-w-none space-y-2"> {/* Added space-y-2 */}
-                        {/* Iterate through message parts for rendering */}
-                        {m.parts?.map((part, index: number) => {
-                          switch (part.type) {
-                            case 'text':
-                              return <MemoizedMarkdown key={`${m.id}-text-${index}`} id={`${m.id}-text-${index}`} content={part.text} />;
-                            case 'tool-invocation':
-                              const toolInvocation = part.toolInvocation;
-                              const toolCallId = toolInvocation.toolCallId;
-                              const toolName = toolInvocation.toolName;
+                    // --- Display View ---
+                    <>
+                      {/* Use MessagePartRenderer to handle parts and fallback */}
+                      <MessagePartRenderer message={m} />
 
-                              // Handle webSearch
-                              if (toolName === 'webSearch') {
-                                if (!('result' in toolInvocation)) {
-                                  // Updated webSearch loading indicator
-                                  return (
-                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                      <Badge variant="outline" className="text-xs font-normal items-center">
-                                        <span className="mr-2 h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
-                                        Searching...
-                                      </Badge>
-                                    </div>
-                                  );
-                                }
-                                // --- Updated to handle structured result ---
-                                const searchResult = toolInvocation.result as { status: string, summary: string, context: string, sources: SdkSource[] } | undefined;
-
-                                // Handle potential error status from tool
-                                if (searchResult?.status === 'error') {
-                                  return (
-                                     <div key={`${m.id}-tool-${toolCallId}-error`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
-                                       Error during search: {searchResult.summary || 'Unknown error'}
-                                     </div>
-                                   );
-                                }
-
-                                // Proceed if status is success (or structure is old/unexpected)
-                                const searchContext = searchResult?.context || "No search context available.";
-                                const searchSourcesRaw = searchResult?.sources || [];
-                                const adaptedSources: AppSource[] = searchSourcesRaw.map((sdkSource: SdkSource, idx: number) => ({
-                                  id: sdkSource.url || `tool-source-${toolCallId}-${idx}`, // Use URL as ID if available
-                                  title: sdkSource.title || 'Untitled Source',
-                                  url: sdkSource.url || '#',
-                                  snippet: sdkSource.snippet || undefined,
-                                }));
-                                return (
-                                  <Accordion key={`${m.id}-tool-${toolCallId}`} type="single" collapsible className="w-full bg-muted/30 rounded-md my-2"> {/* Added my-2 */}
-                                    <AccordionItem value="sources" className="border-none">
-                                      <AccordionTrigger className="text-sm hover:no-underline py-3 px-4 text-muted-foreground">
-                                        Show Search Results ({adaptedSources.length} sources)
-                                      </AccordionTrigger>
-                                      <AccordionContent className="pt-0 pb-4 px-4">
-                                        <SearchResult answer={searchContext} sources={adaptedSources} className="pt-0" />
-                                      </AccordionContent>
-                                    </AccordionItem>
-                                  </Accordion>
-                                );
-                              }
-
-                              // Handle displayCode tool
-                              if (toolName === 'displayCode') {
-                                if (!('result' in toolInvocation)) {
-                                  // Added displayCode loading indicator
-                                  return (
-                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                      <Badge variant="outline" className="text-xs font-normal items-center">
-                                        <span className="mr-2 h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-                                        Generating code...
-                                      </Badge>
-                                    </div>
-                                  );
-                                }
-                                // --- Updated to handle structured result ---
-                                const codeResult = toolInvocation.result as { status: string, summary: string, language: string, code: string, filename?: string } | undefined;
-
-                                // Handle potential error status
-                                if (codeResult?.status === 'error') {
-                                   return (
-                                     <div key={`${m.id}-tool-${toolCallId}-error`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
-                                       Error generating code: {codeResult.summary || 'Unknown error'}
-                                     </div>
-                                   );
-                                }
-
-                                // Extract data from the structured result
-                                const language = codeResult?.language;
-                                const code = codeResult?.code;
-                                const filename = codeResult?.filename;
-
-                                // Basic validation
-                                if (!language || !code) {
-                                  console.error("Invalid data for CodeBlock:", codeResult);
-                                  return (
-                                    <div key={`${m.id}-tool-${toolCallId}-invalid`} className="my-2 p-2 bg-destructive/20 rounded text-sm text-destructive-foreground">
-                                      Error: Received invalid data structure for code block.
-                                    </div>
-                                  );
-                                }
-
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="my-2"> {/* Add margin */}
-                                    <CodeBlock
-                                      language={language}
-                                      code={code}
-                                      filename={filename}
-                                    />
-                                  </div>
-                                );
-                              }
-
-                              // --- Add loading indicators for new tools ---
-                              // Handle Chemistry Visualizer
-                              if (toolName === 'chem-visualizer') {
-                                if (!('result' in toolInvocation)) {
-                                  return (
-                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                      <Badge variant="outline" className="text-xs font-normal items-center">
-                                        <span className="mr-2 h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
-                                        Visualizing chemistry...
-                                      </Badge>
-                                    </div>
-                                  );
-                                }
-                                // Placeholder for result handling
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                    <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
-                                  </div>
-                                );
-                              }
-
-                              // Handle Plot Function
-                              if (toolName === 'plot-function') {
-                                if (!('result' in toolInvocation)) {
-                                  return (
-                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                      <Badge variant="outline" className="text-xs font-normal items-center">
-                                        <span className="mr-2 h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
-                                        Plotting function...
-                                      </Badge>
-                                    </div>
-                                  );
-                                }
-                                // Placeholder for result handling
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                    <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
-                                  </div>
-                                );
-                              }
-
-                              // Handle Double Check
-                              if (toolName === 'double-check') {
-                                if (!('result' in toolInvocation)) {
-                                  return (
-                                    <div key={`${m.id}-tool-${toolCallId}-loading`} className="my-2">
-                                      <Badge variant="outline" className="text-xs font-normal items-center">
-                                        <span className="mr-2 h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></span>
-                                        Double checking...
-                                      </Badge>
-                                    </div>
-                                  );
-                                }
-                                // Placeholder for result handling
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                    <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span> (Display TBD)</div>
-                                  </div>
-                                );
-                              }
-
-                              // Handle Other/Unknown Tools (Generic Placeholder)
-                              if (!('result' in toolInvocation)) {
-                                return (
-                                  <div key={`${m.id}-tool-${toolCallId}-loading`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                    Calling tool: <span className="font-mono">{toolName}</span>...
-                                  </div>
-                                );
-                              }
-                              return (
-                                <div key={`${m.id}-tool-${toolCallId}-result`} className="mt-2 p-2 bg-muted rounded text-sm text-muted-foreground">
-                                  <div className="font-mono text-xs">Tool result from <span className="font-semibold">{toolName}</span></div>
-                                </div>
-                              );
-                            default:
-                              return null; // Or render a placeholder for unknown part types
-                          }
-                        })}
-                        {/* Render simple string content if parts array doesn't exist (fallback) */}
-                        {typeof m.content === 'string' && !m.parts && m.content && (
-                           <MemoizedMarkdown key={`${m.id}-text-fallback`} id={`${m.id}-text-fallback`} content={m.content} />
-                        )}
-                      </div>
-
-                      {/* Render Attachment Badges for User Messages (remains the same) */}
-                      {m.role === 'user' && (m as any).experimental_customData?.attachments && (m as any).experimental_customData.attachments.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {(m as any).experimental_customData.attachments.map((att: LocalAttachmentInfo, index: number) => {
-                            const isImage = att.mimeType.startsWith('image/');
-                            const badgeColor = isImage
-                              ? 'bg-green-100 border-green-300 text-green-800 dark:bg-green-900/50 dark:border-green-700 dark:text-green-300'
-                              : 'bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900/50 dark:border-blue-700 dark:text-blue-300';
-                            const Icon = isImage ? ImageIcon : FileText;
-
-                            return (
-                              <Badge
-                                key={`${m.id}-att-${index}`}
-                                variant="outline" // Use outline and apply custom colors
-                                className={cn("py-1 px-2 text-xs font-normal items-center", badgeColor)}
-                              >
-                                <Icon className="h-3 w-3 mr-1.5" />
-                                {/* Use the imported truncateFileName helper */}
-                                <span title={att.name}>{truncateFileName(att.name, 10)}</span>
-                              </Badge>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </>
+                      {/* Use AttachmentBadges component */}
+                      <AttachmentBadges message={m} />
+                    </> // End Display View Fragment
                   )}
-                  {/* Render token usage badge for assistant messages */}
+
+                  {/* Render Token Usage Badge (Assistant Messages Only) */}
                   {m.role === 'assistant' && tokenUsage.has(m.id) && (
                     <div className="mt-2 flex justify-end">
-                      <Badge variant="outline" className="text-xs font-normal font-mono">
+                      <Badge
+                        variant="outline"
+                        className="font-mono text-xs font-normal"
+                      >
                         <Cpu className="mr-1 h-3 w-3" />
                         {/* Color-coded dot based on token usage */}
-                        <span className={`inline-block w-2 h-2 rounded-full mr-1 ${
-                          tokenUsage.get(m.id)! < 1000 
-                            ? 'bg-green-500' 
-                            : tokenUsage.get(m.id)! < 10000 
-                              ? 'bg-yellow-500' 
-                              : 'bg-blue-500'
-                        }`} />
-                        <span className="font-semibold text-xs lowercase">Token Usage:</span> {tokenUsage.get(m.id)}
+                        <span
+                          className={cn(
+                            'mr-1 inline-block h-2 w-2 rounded-full',
+                            tokenUsage.get(m.id)! < 1000
+                              ? 'bg-green-500'
+                              : tokenUsage.get(m.id)! < 10000
+                                ? 'bg-yellow-500'
+                                : 'bg-blue-500',
+                          )}
+                        />
+                        <span className="text-xs font-semibold lowercase">
+                          Token Usage:
+                        </span>{' '}
+                        {tokenUsage.get(m.id)}
                       </Badge>
                     </div>
                   )}
                 </div>
-              </div>
+              </div> // End Message Wrapper
             ))
           ) : (
-            <div className="flex flex-col space-y-4 h-full items-center justify-center text-muted-foreground">
-              <h1 className='text-4xl'>Welcome!</h1>
-              <p className='font-mono lowercase'>What can I help you learn?</p>
+            // --- Empty Chat View ---
+            <div className="flex h-full flex-col items-center justify-center space-y-4 text-muted-foreground">
+              <h1 className="text-4xl">Welcome!</h1>
+              <p className="font-mono lowercase">What can I help you learn?</p>
             </div>
           )}
+          {/* Scroll Anchor */}
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Chat Input Area */}
         <ChatInput
           input={input}
           handleInputChange={handleInputChange}
           handleSubmit={handleSubmitWrapper}
           isLoading={isLoading}
           activeModes={activeModes}
-          toggleChatMode={toggleChatMode}
+          toggleChatMode={handleToggleChatMode} // Use renamed handler
           setMessages={setMessages} // Pass setMessages down
         />
       </div>
