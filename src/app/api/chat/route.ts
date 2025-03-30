@@ -19,8 +19,8 @@ const tools = {
 
 /**
  * Handles POST requests to the chat API endpoint.
- * - Parses incoming messages and data (active modes, files).
- * - Processes and attaches files to the user message.
+ * - Parses incoming messages and data (active modes, files, local attachment metadata).
+ * - Processes file content and attaches metadata to the user message.
  * - Builds the appropriate system prompt.
  * - Calls the AI model via streamText with messages, system prompt, and tools.
  * - Returns a streaming response.
@@ -32,18 +32,20 @@ export async function POST(req: Request): Promise<Response> {
   try {
     // 1. Parse Request Body
     // Ensure messages is initialized even if not present in the request
-    const { messages = [], data }: { messages?: CoreMessage[]; data?: { activeModes?: string[]; files?: ReceivedFileData[] } } = await req.json();
+    const { messages = [], data }: { messages?: CoreMessage[]; data?: { activeModes?: string[]; files?: ReceivedFileData[]; localAttachments?: Array<{ name: string; mimeType: string }> } } = await req.json();
 
     const receivedActiveModeIds = data?.activeModes ?? [];
     const receivedFiles = data?.files ?? [];
+    const localAttachments = data?.localAttachments ?? []; // Extract localAttachments
     console.log('[API] Received active modes:', receivedActiveModeIds);
     console.log(`[API] Received ${receivedFiles.length} files.`);
+    console.log(`[API] Received ${localAttachments.length} local attachment metadata entries.`); // Log extracted metadata
 
     // Make a mutable copy of messages to allow modification by file processor
     const messagesToSend: CoreMessage[] = [...messages];
 
-    // 2. Process and Attach Files (modifies messagesToSend in place)
-    processAndAttachFiles(messagesToSend, receivedFiles);
+    // 2. Process Files and Attach Metadata (modifies messagesToSend in place)
+    processAndAttachFiles(messagesToSend, receivedFiles); // Removed localAttachments argument
 
     // 3. Build System Prompt
     const finalSystemPrompt = buildSystemPrompt(receivedActiveModeIds);

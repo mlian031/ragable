@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { getAllChatModes, getChatModeById, type ChatMode } from '@/config/chat-modes'; // Import mode config
+import { getChatModeById, type ChatMode } from '@/config/chat-modes'; // Import mode config
 
 interface ChatModeBadgesProps {
   activeModes: Set<string>;
