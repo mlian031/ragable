@@ -8,6 +8,7 @@ import {
   CheckCheck,
   Globe,
   Terminal,
+  Quote,
 } from 'lucide-react';
 
 interface ChatModeTogglesProps {
@@ -35,6 +36,7 @@ export function ChatModeToggles({
         else if (mode.id === 'CHEM_VISUALIZER') IconComponent = FlaskConical;
         else if (mode.id === 'PLOT_FUNCTION') IconComponent = LineChart;
         else if (mode.id === 'DOUBLE_CHECK') IconComponent = CheckCheck;
+        else if (mode.id === 'ACADEMIC_WRITING') IconComponent = Quote;
 
         return (
           <Badge

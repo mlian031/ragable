@@ -1,4 +1,5 @@
-import { Globe, LucideIcon, Code2, FlaskConical, LineChart, CheckCheck } from 'lucide-react'; // Added new icons
+import { Globe, LucideIcon, Code2, FlaskConical, LineChart, CheckCheck, Quote } from 'lucide-react'; // Added Quote icon
+import { ACADEMIC_WRITING_PROMPT } from '@/prompts/academic-writing-prompt'; // Import the new prompt
 
 export interface ChatMode {
   id: string; // Unique identifier
@@ -45,6 +46,13 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     commonLabel: 'Double Check',
     icon: CheckCheck,
     // No system prompt needed for now
+  },
+  ACADEMIC_WRITING: { // Added new mode
+    id: 'ACADEMIC_WRITING',
+    label: 'Academic Writing Assistant Enabled',
+    commonLabel: 'Academic Writing',
+    icon: Quote,
+    systemPrompt: ACADEMIC_WRITING_PROMPT,
   },
   // Example for future:
   // CALCULATOR_MODE: {

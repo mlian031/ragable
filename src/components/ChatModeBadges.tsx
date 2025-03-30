@@ -25,6 +25,7 @@ export function ChatModeBadges({ activeModes }: ChatModeBadgesProps) {
         else if (mode.id === 'CHEM_VISUALIZER') dotColorClass = 'bg-purple-500';
         else if (mode.id === 'PLOT_FUNCTION') dotColorClass = 'bg-orange-500';
         else if (mode.id === 'DOUBLE_CHECK') dotColorClass = 'bg-yellow-500';
+        else if (mode.id === 'ACADEMIC_WRITING') dotColorClass = 'bg-teal-500';
 
         return (
           <Badge

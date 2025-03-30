@@ -1,1 +1,0 @@
-export const FORCE_SEARCH_PROMPT = `You MUST use the search tool to answer this query. Do not rely on your existing knowledge. Provide comprehensive results based *only* on the search information provided.`;
