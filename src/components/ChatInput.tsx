@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { getAllChatModes } from '@/config/chat-modes'; // Import mode config utils
-import { type Message } from '@ai-sdk/react'; // Import Message type
 import { useFileHandling, readFileAsDataURL } from '@/hooks/useFileHandling'; // Import the hook and helper
 import { FileAttachmentDisplay } from './FileAttachmentDisplay'; // Import new component
 import { ChatModeBadges } from './ChatModeBadges'; // Import new component
@@ -41,7 +40,8 @@ interface ChatInputProps {
   // New props for dynamic modes
   activeModes: Set<string>;
   toggleChatMode: (modeId: string) => void;
-  setMessages: (messages: Message[] | ((currentMessages: Message[]) => Message[])) => void;
+  // Removed unused setMessages prop
+  // setMessages: (messages: Message[] | ((currentMessages: Message[]) => Message[])) => void;
 }
 
 export function ChatInput({
@@ -52,7 +52,8 @@ export function ChatInput({
   placeholder = 'Ask about anything...',
   activeModes,
   toggleChatMode,
-  setMessages, // Keep setMessages if needed by originalHandleSubmit or other logic
+  // Removed unused setMessages from destructuring
+  // setMessages,
   onBeforeSubmit, // Destructure the new prop
 }: ChatInputProps) {
   const { toast } = useToast();
@@ -89,7 +90,7 @@ export function ChatInput({
   // Wrapper for handleSubmit to include files
   const handleSubmitWithFiles = useCallback(async (
     e: React.FormEvent<HTMLFormElement>,
-    options?: { data?: Record<string, any> } // Keep original options structure
+    options?: { data?: Record<string, unknown> } // Use unknown instead of any
   ) => {
     e.preventDefault();
 

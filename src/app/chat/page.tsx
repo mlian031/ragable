@@ -2,34 +2,22 @@
 
 import * as React from 'react';
 import { useChat, type Message } from '@ai-sdk/react';
-import {
-  Copy,
-  Cpu,
-  Edit,
-  FileText,
-  Image as ImageIcon,
-  RotateCw,
-} from 'lucide-react';
+import { Cpu } from 'lucide-react'; // Removed unused: Copy, Edit, FileText, ImageIcon, RotateCw
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+// Removed unused: Accordion, AccordionContent, AccordionItem, AccordionTrigger
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
 import { AttachmentBadges } from '@/components/AttachmentBadges'; // Import the new component
 import { ChatInput } from '@/components/ChatInput';
 import { ChatMessageActions } from '@/components/ChatMessageActions';
-import { CodeBlock } from '@/components/code-block'; // Keep for potential direct use? (Maybe remove later if only in MessagePartRenderer)
-import { MemoizedMarkdown } from '@/components/memoized-markdown'; // Keep for potential direct use? (Maybe remove later if only in MessagePartRenderer)
+// Removed unused: CodeBlock
+// Removed unused: MemoizedMarkdown
 import { MessagePartRenderer } from '@/components/MessagePartRenderer';
-import { SearchResult, type Source as AppSource } from '@/components/SearchResult'; // Keep for potential direct use? (Maybe remove later if only in MessagePartRenderer)
-import { cn, truncateFileName } from '@/lib/utils';
+// Removed unused: SearchResult, AppSource
+import { cn } from '@/lib/utils'; // Removed unused: truncateFileName
 
 // --- Type Definitions ---
 
@@ -40,6 +28,10 @@ type LocalAttachmentInfo = {
   name: string;
   mimeType: string;
 };
+
+// Extend Message type locally to include optional attachments
+type MessageWithAttachments = Message & { attachments?: LocalAttachmentInfo[] };
+
 
 // --- Helper Functions ---
 
@@ -230,7 +222,8 @@ export default function Chat() {
     (
       e: React.FormEvent<HTMLFormElement>,
       options?: {
-        data?: Record<string, any> & {
+        // Use unknown instead of any for better type safety
+        data?: Record<string, unknown> & {
           localAttachments?: LocalAttachmentInfo[];
         };
       },
@@ -266,11 +259,11 @@ export default function Chat() {
   React.useEffect(() => {
     if (pendingAttachments && messages.length > 0) {
       const lastMessageIndex = messages.length - 1;
-      const lastMessage = messages[lastMessageIndex];
+      const lastMessage = messages[lastMessageIndex] as MessageWithAttachments; // Assert local type
 
       // Check if it's a user message and doesn't already have attachments property
-      if (lastMessage.role === 'user' && !(lastMessage as any).attachments) {
-        const updatedMessage = {
+      if (lastMessage.role === 'user' && !lastMessage.attachments) {
+        const updatedMessage: MessageWithAttachments = {
           ...lastMessage,
           attachments: pendingAttachments, // Add the attachments
         };
@@ -400,7 +393,8 @@ export default function Chat() {
           isLoading={isLoading}
           activeModes={activeModes}
           toggleChatMode={handleToggleChatMode} // Use renamed handler
-          setMessages={setMessages} // Pass setMessages down
+          // Removed unused setMessages prop being passed
+          // setMessages={setMessages}
           onBeforeSubmit={handleBeforeSubmit} // Pass the callback
         />
       </div>

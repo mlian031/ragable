@@ -46,45 +46,46 @@ export function useFileHandling({
 
     let currentTotalSize = totalSelectedSize; // Use memoized value
     const filesToAdd: File[] = [];
-    let validationError = false;
+    // Removed unused validationError flag
+    // let validationError = false;
 
     if (selectedFiles.length + newFiles.length > maxFiles) {
       toast({
         title: "Too many files",
         description: `You can attach a maximum of ${maxFiles} files.`,
-        variant: "destructive",
-      });
-      validationError = true;
-    } else {
-      for (const file of newFiles) {
+         variant: "destructive",
+       });
+       // validationError = true; // Removed assignment
+     } else {
+       for (const file of newFiles) {
         if (!allowedMimeTypes.includes(file.type)) {
           toast({
             title: "Unsupported file type",
             description: `File "${file.name}" (${file.type}) is not supported. Please upload PDFs or images.`,
-            variant: "destructive",
-          });
-          validationError = true;
-          continue; // Skip this file
-        }
+             variant: "destructive",
+           });
+           // validationError = true; // Removed assignment
+           continue; // Skip this file
+         }
 
         if (currentTotalSize + file.size > maxTotalSizeBytes) {
           toast({
             title: "Size limit exceeded",
             description: `Adding "${file.name}" would exceed the ${maxTotalSizeMB}MB total size limit.`,
-            variant: "destructive",
-          });
-          validationError = true;
-          // Don't break, allow checking other files, but mark error
-        } else if (selectedFiles.length + filesToAdd.length < maxFiles) {
+             variant: "destructive",
+           });
+           // validationError = true; // Removed assignment
+           // Don't break, allow checking other files
+         } else if (selectedFiles.length + filesToAdd.length < maxFiles) {
           // Only add if within count limit and size limit *so far*
           filesToAdd.push(file);
           currentTotalSize += file.size;
         } else {
-           // This case should technically be caught by the initial count check, but good failsafe
-           console.warn("File count limit reached during iteration, skipping:", file.name);
-           validationError = true;
-        }
-      }
+            // This case should technically be caught by the initial count check, but good failsafe
+            console.warn("File count limit reached during iteration, skipping:", file.name);
+            // validationError = true; // Removed assignment
+         }
+       }
     }
 
     if (filesToAdd.length > 0) {

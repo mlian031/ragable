@@ -27,10 +27,12 @@ interface AttachmentBadgesProps {
 export const AttachmentBadges: React.FC<AttachmentBadgesProps> = ({
   message,
 }) => {
-  // Read attachments from the custom 'attachments' property added in chat/page.tsx
-  const attachments = (message as any).attachments as
-    | AttachmentInfo[]
-    | undefined;
+  // Define the extended type locally for type assertion
+  type MessageWithAttachments = Message & { attachments?: AttachmentInfo[] };
+
+  // Read attachments using the defined type assertion
+  const attachments = (message as MessageWithAttachments).attachments;
+    // The check below handles the 'undefined' case, so no need for `as ... | undefined`
 
   if (
     message.role !== 'user' ||

@@ -31,7 +31,7 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     label: 'Chemistry Visualizer Enabled',
     commonLabel: 'Chemistry Visualizer',
     icon: FlaskConical,
-    // No system prompt needed for now
+    systemPrompt: `When discussing specific chemical compounds or structures, first determine the corresponding SMILES string if it's not already provided. Then, you MUST use the displayMolecule tool with the SMILES string to provide a visual representation.`,
   },
   PLOT_FUNCTION: {
     id: 'PLOT_FUNCTION',

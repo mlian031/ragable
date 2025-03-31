@@ -46,7 +46,7 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
         description: "The citation has been copied to your clipboard.",
         duration: 2000,
       });
-      
+
       setTimeout(() => setCopiedSourceIndex(null), 2000);
     }).catch(err => {
       console.error("Citation copying error:", err);
@@ -116,7 +116,7 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
             </Select>
           </div>
         </div>
-        
+
         {/* Display webSearchQueries if available */}
         {groundingMetadata.webSearchQueries && groundingMetadata.webSearchQueries.length > 0 && (
           <div className="mt-3 pl-5 pt-3 border-t border-dashed border-primary/5">
@@ -130,18 +130,18 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
           </div>
         )}
       </div>
-      
+
       <Accordion type="single" collapsible className="w-full">
         {groundingMetadata.groundingSupports?.map((support, index) => {
           const citation = formatCitation(support, citationStyle);
-          const textPreview = support.segment?.text 
+          const textPreview = support.segment?.text
             ? support.segment.text.substring(0, 60) + (support.segment.text.length > 60 ? '...' : '')
             : 'View source details';
-            
+
           return (
-            <AccordionItem 
-              value={`item-${index}`} 
-              key={index} 
+            <AccordionItem
+              value={`item-${index}`}
+              key={index}
               className="border-0 mb-1"
             >
               <AccordionTrigger className="py-2 px-4 hover:no-underline hover:bg-muted/10 rounded-md text-xs font-normal">
@@ -161,20 +161,20 @@ export function SourceDisplay({ groundingMetadata }: SourceDisplayProps) {
                   </div>
                 </div>
               </AccordionTrigger>
-              
+
               <AccordionContent className="pt-1 pb-4 px-4 text-xs">
                 <div className="space-y-4 pl-7">
                   {support.segment?.text && (
                     <div className="pt-2">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-serif mb-1 italic">
-                        Referenced segment
-                      </p>
-                      <blockquote className="italic whitespace-pre-wrap text-muted-foreground pl-3 border-l border-primary/5 py-1 font-serif">
-                        "{support.segment.text}" {/* Escaped quotes */}
-                      </blockquote>
-                    </div>
+                         Referenced segment
+                       </p>
+                       <blockquote className="italic whitespace-pre-wrap text-muted-foreground pl-3 border-l border-primary/5 py-1 font-serif">
+                         &quot;{support.segment.text}&quot; {/* Use " */}
+                       </blockquote>
+                     </div>
                   )}
-                  
+
                   <div className="pt-2">
                     <div className="flex justify-between items-start mb-1">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-serif italic">

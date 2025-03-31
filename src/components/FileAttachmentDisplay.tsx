@@ -39,12 +39,12 @@ export function FileAttachmentDisplay({
             key={index}
             variant="secondary"
             className="py-1 pl-2 pr-1 text-xs font-normal items-center group"
-          >
-            {file.type.startsWith('image/') ? (
-              <Image className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" />
-            ) : (
-              <FileText className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" />
-            )}
+           >
+             {file.type.startsWith('image/') ? (
+               <Image className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" /> /* Removed aria-hidden */
+             ) : (
+               <FileText className="h-3 w-3 mr-1.5 text-muted-foreground shrink-0" /> /* Removed aria-hidden */
+             )} {/* Correctly placed closing parenthesis */}
             {/* Apply truncation here */}
             <span className="max-w-[100px] truncate" title={file.name}>
               {truncateFileName(file.name, 10)} {/* Use maxLength 10 */}

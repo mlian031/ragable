@@ -4,6 +4,7 @@ import { Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { TopRightMenu } from '@/components/TopRightMenu'; // Added import
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -42,6 +43,7 @@ export default function RootLayout({
           enableSystem 
           disableTransitionOnChange
         >
+          <TopRightMenu /> {/* Added Menu Component */}
           {children}
           <Toaster />
         </ThemeProvider>

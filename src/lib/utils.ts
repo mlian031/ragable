@@ -65,7 +65,7 @@ export interface Source {
   /** A relevant snippet from the source, if available. */
   snippet?: string;
   /** Allows for other properties that might exist on the original source object. */
-  [key: string]: any;
+  [key: string]: unknown; // Use unknown instead of any
 }
 
 // --- Citation Formatting ---
@@ -86,7 +86,7 @@ type CitationSourceInput = {
   /** Nested search entry point information, potentially containing a URI. */
   searchEntryPoint?: { uri?: string };
   /** Allows for other properties that might exist on the source object. */
-  [key: string]: any;
+  [key: string]: unknown; // Use unknown instead of any
 };
 
 /**
@@ -147,7 +147,7 @@ type InputSource = {
   url?: string;
   uri?: string;
   title?: string;
-  [key: string]: any; // Allow other properties
+  [key: string]: unknown; // Use unknown instead of any
 };
 
 /**
@@ -166,7 +166,8 @@ const resolveSingleUrl = async (
 ): Promise<Source> => {
   // Prioritize url, then uri
   const sourceUrl = source?.url || source?.uri;
-  const { uri, ...restOfSource } = source; // Prepare base object, removing uri
+  // Don't destructure uri since it's not being used
+  const { ...restOfSource } = source;
 
   if (
     !sourceUrl ||
@@ -210,13 +211,13 @@ const resolveSingleUrl = async (
  * an array of Source objects with resolved URLs.
  * Handles errors gracefully for individual URL resolutions.
  *
- * @param {any[]} sourcesInput - An array of source objects, potentially with 'url' or 'uri'.
+ * @param {unknown[]} sourcesInput - An array of source objects, potentially with 'url' or 'uri'. Use unknown[].
  * @returns {Promise<Source[]>} A promise that resolves to an array of Source objects.
  */
-export async function resolveSourceUrls(sourcesInput: any[]): Promise<Source[]> {
-  // Validate input is an array and cast to InputSource[]
+export async function resolveSourceUrls(sourcesInput: unknown[]): Promise<Source[]> {
+  // Validate input is an array and perform type check/cast
   const validSources: InputSource[] = Array.isArray(sourcesInput)
-    ? (sourcesInput as InputSource[])
+    ? (sourcesInput.filter(s => typeof s === 'object' && s !== null) as InputSource[]) // Add basic object check
     : [];
 
   if (!validSources.length) {
@@ -243,13 +244,12 @@ export async function resolveSourceUrls(sourcesInput: any[]): Promise<Source[]> 
       );
       // Fallback: return the original source data, trying to conform to Source
       const originalSource = validSources[index] || {};
-      const { uri, ...rest } = originalSource;
       const fallbackUrl =
         originalSource.url ||
-        originalSource.uri ||
+        originalSource.uri || // Use originalSource.uri directly instead of destructuring it
         `error_processing_source_${index}`;
       // Cast as Source, knowing url might be an error string
-      return { ...rest, url: fallbackUrl } as Source;
+      return { ...originalSource, url: fallbackUrl } as Source;
     }
   });
 

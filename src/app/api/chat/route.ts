@@ -9,11 +9,13 @@ import {
 import { buildSystemPrompt } from '@/lib/api/promptHelper';
 import { webSearchTool } from '@/lib/tools/webSearchTool';
 import { displayCodeTool } from '@/lib/tools/displayCodeTool';
+import { displayMoleculeTool } from '@/lib/tools/displayMoleculeTool';
 
 // Assemble the tools available to the AI
 const tools = {
   webSearch: webSearchTool,
   displayCode: displayCodeTool,
+  displayMolecule: displayMoleculeTool,
   // Add other imported tools here as needed
 };
 

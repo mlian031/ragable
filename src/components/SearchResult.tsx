@@ -159,13 +159,13 @@ export function SearchResult({
                     </div>
                   </div>
 
-                  {/* Snippet (if exists) */}
-                  {source.snippet && (
-                    <div className="mt-2 ml-5 pl-2 border-l">
-                      <blockquote className="text-xs italic text-muted-foreground">
-                        "{source.snippet}" {/* Escaped quotes */}
-                      </blockquote>
-                    </div>
+                   {/* Snippet (if exists) */}
+                   {source.snippet && (
+                     <div className="mt-2 ml-5 pl-2 border-l">
+                       <blockquote className="text-xs italic text-muted-foreground">
+                       &quot;{source.snippet}&quot; {/* Use " for quotes */}
+                       </blockquote>
+                     </div>
                   )}
 
                   {/* Citation Block */}

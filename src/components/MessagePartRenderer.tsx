@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Message } from '@ai-sdk/react';
+import dynamic from 'next/dynamic'; // Import dynamic
 
 import { Badge } from '@/components/ui/badge';
 import {
@@ -11,6 +12,20 @@ import {
 import { CodeBlock } from '@/components/code-block';
 import { MemoizedMarkdown } from '@/components/memoized-markdown';
 import { SearchResult, type Source as AppSource } from '@/components/SearchResult';
+// Remove direct import of MoleculeDisplay
+// import MoleculeDisplay from '@/components/MoleculeDisplay';
+import { type DisplayMoleculeArgs } from '@/lib/tools/displayMoleculeTool'; // Import args type
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
+
+// Dynamically import MoleculeDisplay with no SSR
+const DynamicMoleculeDisplay = dynamic(
+  () => import('@/components/MoleculeDisplay'),
+  {
+    ssr: false,
+    loading: () => <Skeleton className="h-[250px] w-[300px]" />, // Use Skeleton as placeholder
+  }
+);
+
 
 // Re-define necessary types locally or import if shared
 type SdkSource = {
@@ -143,6 +158,73 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
               );
             }
 
+            // --- Tool: displayMolecule ---
+            if (toolName === 'displayMolecule') {
+              if (!hasResult) {
+                // Loading state
+                return (
+                  <div
+                    key={`${message.id}-tool-${toolCallId}-loading`}
+                    className="my-2"
+                  >
+                    <Badge
+                      variant="outline"
+                      className="items-center text-xs font-normal"
+                    >
+                      <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-purple-500"></span>
+                      Visualizing molecule...
+                    </Badge>
+                  </div>
+                );
+              }
+              // Result state
+              const moleculeResult = toolInvocation.result as ({ status: string; summary: string } & DisplayMoleculeArgs) | undefined;
+
+              if (moleculeResult?.status === 'error') {
+                return (
+                  <div
+                    key={`${message.id}-tool-${toolCallId}-error`}
+                    className="my-2 rounded bg-destructive/20 p-2 text-sm text-destructive-foreground"
+                  >
+                    Error visualizing molecule: {moleculeResult.summary || 'Unknown error'}
+                  </div>
+                );
+              }
+
+              const { smiles, substructure, width, height, legend, options } = moleculeResult || {};
+
+              if (!smiles) {
+                 console.error('Invalid data for MoleculeDisplay:', moleculeResult);
+                 return (
+                   <div
+                     key={`${message.id}-tool-${toolCallId}-invalid`}
+                     className="my-2 rounded bg-destructive/20 p-2 text-sm text-destructive-foreground"
+                   >
+                     Error: Received invalid data structure for molecule display (missing SMILES).
+                   </div>
+                 );
+              }
+
+              return (
+                 <div
+                   key={`${message.id}-tool-${toolCallId}-result`}
+                   className="my-2"
+                 >
+                   {/* Use the dynamically imported component */}
+                   <DynamicMoleculeDisplay
+                     smiles={smiles}
+                     substructure={substructure}
+                     width={width}
+                     height={height}
+                     legend={legend}
+                     options={options}
+                     // Add any specific className if needed, e.g., for margins
+                   />
+                 </div>
+               );
+            }
+
+
             // --- Tool: displayCode ---
             if (toolName === 'displayCode') {
               if (!hasResult) {
@@ -211,39 +293,6 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
                     code={code}
                     filename={filename}
                   />
-                </div>
-              );
-            }
-
-            // --- Tool: chem-visualizer (Placeholder) ---
-            if (toolName === 'chem-visualizer') {
-              if (!hasResult) {
-                return (
-                  <div
-                    key={`${message.id}-tool-${toolCallId}-loading`}
-                    className="my-2"
-                  >
-                    <Badge
-                      variant="outline"
-                      className="items-center text-xs font-normal"
-                    >
-                      <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-purple-500"></span>
-                      Visualizing chemistry...
-                    </Badge>
-                  </div>
-                );
-              }
-              // Placeholder for result display
-              return (
-                <div
-                  key={`${message.id}-tool-${toolCallId}-result`}
-                  className="mt-2 rounded bg-muted p-2 text-sm text-muted-foreground"
-                >
-                  <div className="font-mono text-xs">
-                    Tool result from{' '}
-                    <span className="font-semibold">{toolName}</span> (Display
-                    TBD)
-                  </div>
                 </div>
               );
             }
