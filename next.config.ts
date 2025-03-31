@@ -4,7 +4,12 @@ import path from "path";
 // Removed bundle analyzer import and configuration for dev mode compatibility
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Add the compiler option here
+  compiler: {
+    // Remove all console logs except console.error in production
+    removeConsole: true, // You could also configure specific removals, e.g., { exclude: ['error'] }
+  },
+  /* other config options */
   webpack: (config, { isServer }) => {
     // Add CopyPlugin to copy wasm file
     config.plugins.push(
