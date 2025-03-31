@@ -18,6 +18,7 @@ import { ChatMessageActions } from '@/components/ChatMessageActions';
 import { MessagePartRenderer } from '@/components/MessagePartRenderer';
 // Removed unused: SearchResult, AppSource
 import { cn } from '@/lib/utils'; // Removed unused: truncateFileName
+import { TopRightMenu } from '@/components/TopRightMenu';
 
 // --- Type Definitions ---
 
@@ -284,6 +285,7 @@ export default function Chat() {
 
   return (
     <TooltipProvider delayDuration={100}>
+      <TopRightMenu /> 
       <div className="flex min-h-screen flex-col max-w-4xl mx-auto px-4 py-8 md:px-6 md:py-12">
         {/* Chat Messages Area */}
         <div className="flex-grow overflow-y-auto mb-4 pb-24 w-full">

@@ -43,7 +43,6 @@ export default function RootLayout({
           enableSystem 
           disableTransitionOnChange
         >
-          <TopRightMenu /> {/* Added Menu Component */}
           {children}
           <Toaster />
         </ThemeProvider>
