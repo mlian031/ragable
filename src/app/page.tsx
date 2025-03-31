@@ -4,23 +4,25 @@ import React from 'react'
 
 const HomePage = () => {
   return (
-    <main className="min-h-screen p-8">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6">Welcome</h1>
-        <p className="text-lg ">
-          This is a simple home page built with Next.js and Tailwind CSS.
+    <main className="flex items-center justify-center min-h-screen p-8 bg-background text-foreground">
+      <div className="text-center max-w-lg mx-auto">
+        {/* Attempting a serif font similar to the image, fallback to default */}
+        <h1 className="text-6xl font-serif font-medium mb-4 text-gray-700">
+          Welcome!
+        </h1>
+        <p className="text-xl text-gray-500 mb-8">
+          what can i help you learn?
         </p>
-        <div className="flex flex-row space-x-10">
-          <div className="flex flex-row *:space-x-2 items-center underline underline-offset-4 hover:underline ml-2">
-            
-            <Link href="/chat" className="">
-              Go to Chat
-            </Link>
-
-            <ArrowUpRight className="h-5 w-5" />
-          </div>
-
-        </div>
+        <p className="text-lg text-gray-600 mb-12">
+          Start exploring capabilities by asking a question or exploring different modes.
+        </p>
+        <Link
+          href="/chat"
+          className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gray-800 hover:bg-gray-700 transition-colors duration-200"
+        >
+          Start Chatting
+          <ArrowUpRight className="ml-2 h-5 w-5" />
+        </Link>
       </div>
     </main>
   )
