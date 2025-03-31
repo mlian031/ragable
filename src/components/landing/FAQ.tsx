@@ -48,7 +48,7 @@ export default function FaqSection() {
   const faqs: FaqItemProps[] = [
     {
       question: "What is Ragable?",
-      answer: "",
+      answer: "Ragable is an AI-powered study tool that helps you learn faster and more effectively. It allows you to upload your study materials and instantly get comprehensive explanations, summaries, and answers to your questions about the content. Ragable uses advanced AI to understand your documents and provide personalized learning assistance.",
     },
     {
       question: "Do you offer a free trial?",
