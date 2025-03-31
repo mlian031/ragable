@@ -78,7 +78,8 @@ export default function FeatureSection({
           {/* Image */}
           {imageUrl && (
             <div className={`w-full md:w-1/2 ${imagePosition === "left" ? "md:order-1" : "md:order-2"}`}>
-              <div className="rounded-lg overflow-hidden">
+              {/* Add relative positioning here */}
+              <div className="rounded-lg overflow-hidden relative"> 
                 <Image
                   src={imageUrl}
                   alt={imageAlt}
@@ -86,6 +87,16 @@ export default function FeatureSection({
                   height={400}
                   className="w-full rounded-lg"
                 />
+                {/* Conditionally add the overlay image */}
+                {imageUrl === "/abstracts/grainient-3.png" && (
+                  <Image
+                    src="/abstracts/database-graphic.png"
+                    alt="Database overlay"
+                    layout="fill" // Use layout="fill" for absolute positioning
+                    objectFit="contain" // Or "cover" depending on desired effect
+                    className="absolute inset-0 mix-blend-soft-light opacity-100" // Adjust blend mode and opacity as needed
+                  />
+                )}
               </div>
             </div>
           )}
