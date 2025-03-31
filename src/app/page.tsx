@@ -1,13 +1,13 @@
 import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
 import FeatureSection from "@/components/landing/FeatureSection";
-import TestimonialsSection from "@/components/landing/TestimonialSection";
 // Removed FeaturesGrid import for now, will add BenchmarkChart later
 import FaqSection from "@/components/landing/FAQ";
 import * as Icons from "lucide-react";
 import CtaSection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
 import BenchmarkChart from "@/components/landing/BenchmarkChart"; // Import the new chart component
+import FeaturesGrid from "@/components/landing/FeaturesGrid";
 
 
 export type FeatureData = {
@@ -146,9 +146,7 @@ export default function LandingPage() {
           />
         ))}
         <BenchmarkChart />
-
-        <TestimonialsSection />
-        {/* Removed FeaturesGrid for now */}
+        {/* <FeaturesGrid/> */}
         <FaqSection />
         <CtaSection />
          {/* Add the chart component */}
