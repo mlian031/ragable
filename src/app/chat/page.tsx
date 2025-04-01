@@ -1,12 +1,14 @@
 'use client';
 
 import * as React from 'react';
+// Link import is not needed
 import { useChat, type Message } from '@ai-sdk/react';
-import { Cpu } from 'lucide-react'; // Removed unused: Copy, Edit, FileText, ImageIcon, RotateCw
+import { Cpu, TriangleAlert } from 'lucide-react'; // Removed unused: Copy, Edit, FileText, ImageIcon, RotateCw
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Import Alert components
 // Removed unused: Accordion, AccordionContent, AccordionItem, AccordionTrigger
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useToast } from '@/components/ui/use-toast';
@@ -33,6 +35,9 @@ type LocalAttachmentInfo = {
 // Extend Message type locally to include optional attachments
 type MessageWithAttachments = Message & { attachments?: LocalAttachmentInfo[] };
 
+
+// --- Constants ---
+const MAX_CHAT_MESSAGES = 10; // Define the message limit
 
 // --- Helper Functions ---
 
@@ -82,6 +87,8 @@ export default function Chat() {
     isLoading,
     setMessages,
     reload,
+    stop, // Add stop function
+    status, // Add status property
   } = useChat({
     api: '/api/chat',
     // maxSteps: 2, // Example: Allow multiple tool calls if needed
@@ -103,6 +110,8 @@ export default function Chat() {
 
   // Use rawMessages directly as the source of truth
   const messages: Message[] = rawMessages;
+  const currentMessageCount = messages.length; // Calculate current message count
+  const isMessageLimitReached = currentMessageCount >= MAX_CHAT_MESSAGES; // Check if limit is reached
 
   // --- Event Handlers ---
 
@@ -387,6 +396,22 @@ export default function Chat() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Message Limit Alert */}
+        {isMessageLimitReached && (
+          <Alert variant="destructive" className="mb-4">
+            <TriangleAlert className="h-4 w-4" />
+            <AlertTitle>Message Limit Reached</AlertTitle>
+            <AlertDescription>
+              You have reached the maximum number of messages ({MAX_CHAT_MESSAGES}) for this chat.
+              Please{' '}
+              <a href="/chat" className="font-medium underline hover:text-destructive-foreground">
+                start a new chat
+              </a>{' '}
+              to continue.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Chat Input Area */}
         <ChatInput
           input={input}
@@ -398,6 +423,11 @@ export default function Chat() {
           // Removed unused setMessages prop being passed
           // setMessages={setMessages}
           onBeforeSubmit={handleBeforeSubmit} // Pass the callback
+          stop={stop} // Pass stop function
+          status={status} // Pass status
+          // Pass message count props
+          currentMessageCount={currentMessageCount}
+          maxChatMessages={MAX_CHAT_MESSAGES}
         />
       </div>
     </TooltipProvider>

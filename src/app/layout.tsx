@@ -23,7 +23,8 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Ragable - AI Chat with Sources",
-  description: "A modern AI chat interface with source citations and references",
+  description:
+    "A modern AI chat interface with source citations and references",
 };
 
 export default function RootLayout({
@@ -36,10 +37,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased min-h-screen`}
       >
-        <ThemeProvider 
-          attribute="class" 
-          defaultTheme="system" 
-          enableSystem 
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
           {children}
