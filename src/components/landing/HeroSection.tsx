@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Button } from "../ui/button";
 
 export default function HeroSection() {
   return (
@@ -9,64 +10,80 @@ export default function HeroSection() {
       <div className="container mx-auto">
         <div className="max-w-3xl mx-auto text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-normal mb-6 tracking-wide">
-            An agentic co-pilot for you to take <span className="font-serif italic font-thin tracking-tighter">agency</span> of your learning
+            An agentic co-pilot for you to take{" "}
+            <span className="font-serif italic font-thin tracking-tighter">
+              agency
+            </span>{" "}
+            of your learning
           </h1>
-            <p className="text-lg md:text-xl text-gray-600 mb-8">
-              Let's take you from passive understanding to <span className="bg-gradient-to-r from-red-700 to-purple-600 text-transparent bg-clip-text">active mastery</span>.
-            </p>
-            
-          
+          <p className="text-lg md:text-xl text-gray-600 mb-8">
+            Let&apos;s take you from passive understanding to{" "}
+            <span className="bg-gradient-to-r from-red-700 to-purple-600 text-transparent bg-clip-text">
+              active mastery
+            </span>
+            .
+          </p>
+
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             {/* TODO: Update link/text later if needed */}
-            <Link
-              href="/"
-              className="px-8 py-3 bg-primary text-white font-medium rounded-md hover:bg-primary/90 text-center"
+            <Button
+              variant="default"
+              className="text-xl font-medium p-6 hover:opacity-80"
+              style={{
+                background: "url('/abstracts/grainient-2.png')",
+                backgroundSize: "cover",
+                backgroundPosition: "top",
+              }}
             >
-              Get Ragable Free
-            </Link>
+              <Link href="/chat" className="">
+                Get started
+              </Link>
+            </Button>
           </div>
           {/* TODO: Update trusted by text later if needed */}
-          <p className="text-sm text-gray-500 mt-6">Built for students, by students.</p>
+          <p className="text-sm text-gray-500 mt-6">
+            Built for students, by students.
+          </p>
 
           {/* University logos are already updated */}
           <div className="flex flex-wrap justify-center items-center gap-8 mt-8">
             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
               <Image
-              src="/university-logos/uoftoronto.png"
-              alt="Partner Logo"
-              width={100}
-              height={40}
-              className="h-11 w-auto object-contain"
+                src="/university-logos/uoftoronto.png"
+                alt="Partner Logo"
+                width={100}
+                height={40}
+                className="h-12 w-auto object-contain"
               />
             </div>
             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
               <Image
-              src="/university-logos/uottawa.png"
-              alt="Partner Logo"
-              width={100}
-              height={40}
-              className="h-10 w-auto object-contain"
+                src="/university-logos/uottawa.png"
+                alt="Partner Logo"
+                width={100}
+                height={40}
+                className="h-10 w-auto object-contain"
               />
             </div>
             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
               <Image
-              src="/university-logos/uvirginiatech.png"
-              alt="Partner Logo"
-              width={100}
-              height={40}
-              className="h-8 w-auto object-contain"
+                src="/university-logos/uvirginiatech.png"
+                alt="Partner Logo"
+                width={100}
+                height={40}
+                className="h-8 w-auto object-contain"
               />
             </div>
             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
               <Image
-              src="/university-logos/uwaterloo.png"
-              alt="Partner Logo"
-              width={100}
-              height={40}
-              className="h-10 w-auto object-contain"
+                src="/university-logos/uwaterloo.png"
+                alt="Partner Logo"
+                width={100}
+                height={40}
+                className="h-10 w-auto object-contain"
               />
             </div>
-            </div>
+          </div>
         </div>
 
         {/* Add relative positioning to the container */}

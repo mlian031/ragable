@@ -2,12 +2,11 @@
 
 import * as React from "react"
 // Add Cell to the import
-import { Bar, BarChart, LabelList, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
+import { Bar, BarChart, LabelList, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from "recharts"
 
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -140,7 +139,7 @@ interface BenchmarkCategoryChartProps {
   className?: string;
 }
 
-function BenchmarkCategoryChart({ title, subtitle, description, data, className }: BenchmarkCategoryChartProps) {
+function BenchmarkCategoryChart({ title, subtitle, data, className }: BenchmarkCategoryChartProps) {
   // No need for separate color/class functions anymore
 
   return (
@@ -244,7 +243,7 @@ export function BenchmarkChart() {
           Base Model Benchmarks
         </h2>
         <p className="text-left text-muted-foreground max-w-3xl mb-8">
-          Benchmark performance across key reasoning tasks. Ragable further augments Google Deepmind's <span className="font-medium text-primary">Gemini 2.5 Pro</span> with specialized tools and a <span className="font-medium text-primary">vast resource base</span>, enhancing its capabilities <span className="font-medium text-primary">beyond these benchmarks</span>.
+          Benchmark performance across key reasoning tasks. Ragable further augments Google Deepmind&apos;s <span className="font-medium text-primary">Gemini 2.5 Pro</span> with specialized tools and a <span className="font-medium text-primary">vast resource base</span>, enhancing its capabilities <span className="font-medium text-primary">beyond these benchmarks</span>.
         </p>
       </div>
        {/* Updated grid to show only 3 charts */}

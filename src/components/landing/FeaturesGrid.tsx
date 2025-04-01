@@ -6,7 +6,6 @@ import {
   Search,
   Languages,
   Network,
-  Building,
   Globe,
   type LucideIcon,
 } from "lucide-react";

@@ -7,7 +7,6 @@ import * as Icons from "lucide-react";
 import CtaSection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
 import BenchmarkChart from "@/components/landing/BenchmarkChart"; // Import the new chart component
-import FeaturesGrid from "@/components/landing/FeaturesGrid";
 
 
 export type FeatureData = {
@@ -25,7 +24,7 @@ export type FeatureData = {
 };
 
 // Redefine feature sections for Ragable v2
-export const featureSections: FeatureData[] = [
+const featureSections: FeatureData[] = [ // Removed export keyword
   {
     title: "Unparalleled AI Assistance",
     subtitle: "Powered by Gemini 2.5 Pro Augmented With Multimodal Tools",
@@ -103,6 +102,11 @@ export const featureSections: FeatureData[] = [
         icon: "UploadCloud",
         title: "Document Upload & Course Spaces",
         description: "Upload PDFs, images, and more. Organize documents into dedicated spaces for each course."
+      },
+      {
+        icon: "FolderInput", // Added Google Drive feature
+        title: "Google Drive Integration",
+        description: "Organize course files in Drive, then one-click import folders as Course Spaces for streamlined content generation."
       },
       {
         icon: "FileText",

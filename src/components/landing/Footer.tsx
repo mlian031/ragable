@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
 type FooterColumnProps = {
   title: string;
@@ -14,7 +13,7 @@ type FooterColumnProps = {
 
 function FooterColumn({ title, links }: FooterColumnProps) {
   return (
-    <div>
+    <div className="px-6">
       <h3 className="font-semibold text-sm mb-4">{title}</h3>
       <ul className="space-y-2">
         {links.map((link) => (

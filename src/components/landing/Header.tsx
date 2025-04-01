@@ -24,7 +24,7 @@ export default function Header() {
             Resources
           </Link>
           <Link
-            href="/"
+            href="/pricing"
             className="text-sm font-medium text-gray-600 hover:text-gray-900"
           >
             Pricing
@@ -85,7 +85,7 @@ export default function Header() {
             Resources
           </Link>
           <Link
-            href="/"
+            href="/pricing"
             className="text-sm font-medium text-gray-600 hover:text-gray-900"
           >
             Pricing

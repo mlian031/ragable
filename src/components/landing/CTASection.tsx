@@ -1,20 +1,50 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
+import { Button } from "../ui/button";
 
 export default function CTASection() {
   return (
-    <section className="py-16 md:py-24 bg-gray-50">
-      <div className="container mx-auto text-center max-w-3xl">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">Get started for free.</h2>
-        <p className="text-lg text-gray-600 mb-8">Take charge of your own learning. No card required.</p>
+    <>
+    <div className="py-12"></div>
+    <section className="relative overflow-hidden py-24 md:py-32">
+      <Image
+        src="/abstracts/grainient-2.png"
+        alt="Gradient Background"
+        fill
+        className="absolute inset-0 object-cover opacity-100 rounded-2xl"
+        style={{
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+      
+      {/* Removed mx-auto, adjusted max-width, standard padding */}
+      <div className="container text-left max-w-2xl relative z-10 px-4 sm:px-6 lg:px-8 py-6">
+        {/* Ensured font weight and color match */}
+        <h2 className="text-4xl md:text-5xl lg:text-6xl font-semibold mb-5 text-white py-4">Get started for free</h2>
+        {/* Ensured text color and margin match */}
+        <p className="text-lg text-white mb-10">Take agency over your learning and get started right now. No card required.</p>
+        <Button variant="default"
+          className="text-xl font-medium p-6"
+          style={{
+            background: "url('/abstracts/grainient-2.png')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }} // Ensured button style matches
+        >
         <Link
           href="/login"
-          className="px-8 py-3 bg-primary text-white font-medium rounded-md hover:bg-primary/90 inline-block"
+          // Ensured text color and font weight match
+          className="text-lg font-medium hover:opacity-80 inline-flex items-center gap-2"
         >
-          Get Ragable free
+          Get Ragable free <span>→</span>
         </Link>
+        </Button>
       </div>
     </section>
+    <div className="py-12"></div>
+    </>
   );
 }
