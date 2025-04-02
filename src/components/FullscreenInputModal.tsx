@@ -30,6 +30,7 @@ interface FullscreenInputModalProps {
   maxFiles: number;
   maxTotalSizeMB: number;
   totalSelectedSizeMB: string;
+  disabled?: boolean; // Add disabled prop
 }
 
 export function FullscreenInputModal({
@@ -46,6 +47,7 @@ export function FullscreenInputModal({
   maxFiles,
   maxTotalSizeMB,
   totalSelectedSizeMB,
+  disabled = false, // Destructure disabled prop
 }: FullscreenInputModalProps) {
   const [activeTab, setActiveTab] = useState('write');
 
@@ -78,7 +80,7 @@ export function FullscreenInputModal({
                 value={input}
                 onChange={handleInputChange}
                 placeholder={placeholder}
-                disabled={isLoading}
+                disabled={isLoading || disabled} // Apply disabled prop
                 // Adjusted styling: flex-grow for height, added border/rounded
                 className="flex-grow resize-none p-4 border rounded-md focus-visible:ring-1 focus-visible:ring-ring"
                 autoFocus // Keep autoFocus here

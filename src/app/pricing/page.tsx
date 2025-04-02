@@ -6,9 +6,11 @@ import Footer from '@/components/landing/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"; // Added Alert components
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Terminal } from 'lucide-react'; // Added Terminal icon
 
 // Define tier data structure
 interface TierFeature {
@@ -143,6 +145,7 @@ const universityLogos = [
   { src: '/university-logos/uottawa.png', alt: 'University of Ottawa Logo', width: 140, height: 40 },
   { src: '/university-logos/uvirginiatech.png', alt: 'Virginia Tech Logo', width: 160, height: 40 },
   { src: '/university-logos/uwaterloo.png', alt: 'University of Waterloo Logo', width: 150, height: 40 },
+  { src: '/university-logos/uqueens.png', alt: 'Queen\'s University Logo', width: 150, height: 40 },
 ];
 
 export default function PricingPage() {
@@ -154,9 +157,9 @@ export default function PricingPage() {
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="container mx-auto flex flex-col items-center text-center py-16 md:py-24">
+        <section className="container mx-auto flex flex-col items-center text-center py-8 md:py-12">
           <div className="max-w-2xl">
-          <h1 className="text-4xl font-bold tracking-tight lg:text-6xl xl:text-8xl max-w-3xl">
+          <h1 className="text-4xl font-bold tracking-tight lg:text-4xl xl:text-6xl max-w-3xl">
             Ignore the noise. Focus on what matters.
           </h1>
           </div>
@@ -183,6 +186,18 @@ export default function PricingPage() {
            </div>
         </section>
 
+        {/* Upgrade Notice Banner */}
+        <section className="container mx-auto flex justify-center pb-8"> {/* Added padding-bottom */}
+          <Alert className="max-w-3xl"> {/* Constrain width */}
+            <Terminal className="h-4 w-4" /> {/* Icon */}
+            <AlertTitle>Heads up!</AlertTitle>
+            <AlertDescription className=''>
+              <span>We&apos;re working hard to get automated payments and self checkout working!</span>
+             <span> To upgrade your plan in the meantime, please drop Mike a ping on our{' '} <a href="https://discord.gg/bzTEStMhER" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-4">community Discord.</a> Psst. Look for the guy with [Ragable] in his name.</span>
+            </AlertDescription>
+          </Alert>
+        </section>
+
         {/* Pricing Section */}
         <section className="container mx-auto flex flex-col items-center py-16 md:pb-24">
           {/* Billing Toggle */}
@@ -194,12 +209,15 @@ export default function PricingPage() {
           </Tabs>
 
           {/* Pricing Cards Grid */}
-          <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-4 w-full max-w-6xl">
+          <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-3 w-full max-w-6xl">
             {currentTiers.map((tier) => (
               <Card key={tier.name} className={`flex flex-col rounded-lg border p-6 ${tier.popular ? 'border-primary' : ''}`}>
                 <CardHeader className="p-0 mb-4">
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-lg font-semibold">{tier.name}</h3>
+                    <div className="flex items-center gap-2"> {/* Wrap name and potential badge */}
+                      <h3 className="text-lg font-semibold">{tier.name}</h3>
+                      {tier.name === 'Team' && <Badge variant="outline">(coming soon)</Badge>} {/* Add coming soon badge for Team */}
+                    </div>
                     {tier.badgeText && <Badge variant={tier.popular ? 'default' : 'secondary'}>{tier.badgeText}</Badge>}
                   </div>
                   <div className="flex items-baseline gap-1">
@@ -211,6 +229,7 @@ export default function PricingPage() {
                   <Button
                     className="w-full mb-6"
                     variant={tier.buttonVariant}
+                    disabled
                     style={tier.name === 'Pro' ? {
                       backgroundImage: `url('/abstracts/grainient-1.png')`,
                       backgroundSize: 'cover', // Adjust as needed
@@ -234,12 +253,13 @@ export default function PricingPage() {
                   </ul>
                 </CardContent>
                 {/* Footer can be used if needed later */}
-                {/* <CardFooter className="p-0 mt-auto">
-                </CardFooter> */}
+                <CardFooter className="p-0 mt-auto">
+                </CardFooter> 
               </Card>
             ))}
 
-             {/* Enterprise Card (Separate) */}
+            {/*
+            Enterprise Card (Separate)
              <Card className="flex flex-col rounded-lg border p-6 bg-muted/30 md:col-span-3 lg:col-span-1">
                 <CardHeader className="p-0 mb-4">
                     <h3 className="text-lg font-semibold">Enterprise</h3>
@@ -248,7 +268,6 @@ export default function PricingPage() {
                 <CardContent className="flex-1 p-0 mb-6">
                    <p className="text-lg font-medium mb-3">Includes everything in Team, plus:</p>
                    <ul className="space-y-2 text text-muted-foreground">
-                      {/* Assuming Enterprise gets all Team features plus these */}
                       <li className="flex items-start"><span className="mr-2 text-primary">✓</span><span>Everything in Team</span></li>
                       <li className="flex items-start"><span className="mr-2 text-primary">✓</span><span>Volume Discounts</span></li>
                       <li className="flex items-start"><span className="mr-2 text-primary">✓</span><span>Custom Integrations</span></li>
@@ -260,7 +279,8 @@ export default function PricingPage() {
                 <CardFooter className="p-0 mt-auto">
                    <Button className="w-full" variant="outline">Contact Sales</Button>
                 </CardFooter>
-             </Card>
+             </Card> 
+             */}
           </div>
         </section>
       </main>

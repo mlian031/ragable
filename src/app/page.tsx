@@ -1,12 +1,13 @@
 import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
 import FeatureSection from "@/components/landing/FeatureSection";
-// Removed FeaturesGrid import for now, will add BenchmarkChart later
 import FaqSection from "@/components/landing/FAQ";
 import * as Icons from "lucide-react";
 import CtaSection from "@/components/landing/CTASection";
 import Footer from "@/components/landing/Footer";
 import BenchmarkChart from "@/components/landing/BenchmarkChart"; // Import the new chart component
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 
 export type FeatureData = {
@@ -128,7 +129,17 @@ const featureSections: FeatureData[] = [ // Removed export keyword
 ];
 
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/chat");
+  }
+
   return (
     <>
       <div className="px-6 sm:px-4">

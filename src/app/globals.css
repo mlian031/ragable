@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-
+@import "mafs/core.css";
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
