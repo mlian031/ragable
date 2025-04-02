@@ -38,6 +38,7 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     label: 'Plotting Enabled',
     commonLabel: 'Plotting',
     icon: LineChart,
+    systemPrompt: `Politely inform the user that this tool is not available in this environment. However, you can provide the python code to generate the plot using the displayCode tool. Make sure to include all necessary libraries and functions for the user to run it successfully.`,
     // No system prompt needed for now
   },
   DOUBLE_CHECK: {
@@ -45,6 +46,7 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     label: 'Double Check Enabled',
     commonLabel: 'Double Check',
     icon: CheckCheck,
+    systemPrompt: `Politely inform the user this tool is not available in this environment.`
     // No system prompt needed for now
   },
   ACADEMIC_WRITING: { // Added new mode

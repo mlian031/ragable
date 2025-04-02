@@ -24,6 +24,8 @@ import { MessagePartRenderer } from '@/components/MessagePartRenderer';
 import { cn } from '@/lib/utils'; // Removed unused: truncateFileName
 import { TopRightMenu } from '@/components/TopRightMenu';
 import { createClient } from '@/utils/supabase/client';
+import { set } from 'lodash';
+import Link from 'next/link';
 
 // --- Type Definitions ---
 
@@ -40,7 +42,7 @@ type MessageWithAttachments = Message & { attachments?: LocalAttachmentInfo[] };
 
 
 // --- Constants ---
-const MAX_CHAT_MESSAGES = 10; // Define the message limit
+// Removed MAX_CHAT_MESSAGES constant
 
 // --- Helper Functions ---
 
@@ -82,6 +84,8 @@ export default function Chat() {
   const [pendingAttachments, setPendingAttachments] = useState<LocalAttachmentInfo[] | null>(null);
   // State to hold the authenticated user
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // State to track if the daily backend limit was hit
+  const [isDailyLimitReached, setIsDailyLimitReached] = useState<boolean>(false);
 
   // --- AI SDK Chat Hook ---
   const {
@@ -97,6 +101,9 @@ export default function Chat() {
   } = useChat({
     api: '/api/chat',
     // maxSteps: 2, // Example: Allow multiple tool calls if needed
+    onError: () => {
+      setIsDailyLimitReached(true);
+    },
     onFinish: (message, options) => {
       console.log('Stream finished. Final assistant message:', message);
       // Store token usage when the stream for an assistant message finishes
@@ -115,8 +122,9 @@ export default function Chat() {
 
   // Use rawMessages directly as the source of truth
   const messages: Message[] = rawMessages;
-  const currentMessageCount = messages.length; // Calculate current message count
-  const isMessageLimitReached = currentMessageCount >= MAX_CHAT_MESSAGES; // Check if limit is reached
+  // Removed frontend message limit calculation
+  // const currentMessageCount = messages.length;
+  // const isMessageLimitReached = currentMessageCount >= MAX_CHAT_MESSAGES;
 
   // --- Event Handlers ---
 
@@ -421,23 +429,22 @@ export default function Chat() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Message Limit Alert */}
-        {isMessageLimitReached && (
-          <Alert variant="destructive" className="mb-4">
+        {/* Daily Limit Reached Alert */}
+        {isDailyLimitReached && (
+          <Alert variant="default" className="mb-4">
             <TriangleAlert className="h-4 w-4" />
-            <AlertTitle>Message Limit Reached</AlertTitle>
+            <AlertTitle>Daily Message Limit Reached</AlertTitle>
             <AlertDescription>
-              You have reached the maximum number of messages ({MAX_CHAT_MESSAGES}) for this chat.
-              Please{' '}
-              <a href="/chat" className="font-medium underline hover:text-destructive-foreground">
-                start a new chat
-              </a>{' '}
-              to continue.
+              <span>
+              You have used all your messages for today on the free plan. Please
+              try again tomorrow or consider <Link href="/pricing" className='font-semibold underline text-black'>upgrading your plan</Link>.
+              </span>
             </AlertDescription>
           </Alert>
         )}
 
         {/* Chat Input Area */}
+        {/* Disable input if daily limit is reached */}
         <ChatInput
           input={input}
           handleInputChange={handleInputChange}
@@ -450,9 +457,10 @@ export default function Chat() {
           onBeforeSubmit={handleBeforeSubmit} // Pass the callback
           stop={stop} // Pass stop function
           status={status} // Pass status
-          // Pass message count props
-          currentMessageCount={currentMessageCount}
-          maxChatMessages={MAX_CHAT_MESSAGES}
+          // Removed props related to old frontend limit
+          // currentMessageCount={currentMessageCount}
+          // maxChatMessages={MAX_CHAT_MESSAGES}
+          disabled={isDailyLimitReached} // Disable input when daily limit is hit
         />
       </div>
     </TooltipProvider>

@@ -48,9 +48,11 @@ interface ChatInputProps {
   // Add stop and status props
   stop: () => void;
   status: "submitted" | "streaming" | "ready" | "error";
-  // Add message count props
-  currentMessageCount: number;
-  maxChatMessages: number;
+  // Removed unused message count props from interface
+  // currentMessageCount: number;
+  // maxChatMessages: number;
+  // Add disabled prop
+  disabled?: boolean;
 }
 
 export function ChatInput({
@@ -66,9 +68,10 @@ export function ChatInput({
   onBeforeSubmit, // Destructure the new prop
   stop, // Destructure stop
   status, // Destructure status
-  // Destructure message count props
-  currentMessageCount,
-  maxChatMessages,
+  // Removed unused message count props from destructuring
+  // currentMessageCount,
+  // maxChatMessages,
+  disabled = false, // Destructure disabled prop with default value
 }: ChatInputProps) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -262,11 +265,11 @@ export function ChatInput({
   // Get available modes
   const availableModes = getAllChatModes();
 
-  // Determine if submit button should be disabled
-  const isMessageLimitReached = currentMessageCount >= maxChatMessages;
+  // Determine if submit button should be disabled based on loading, input, files, and the new disabled prop
   const isSubmitDisabled =
+    disabled || // Check the main disabled prop first
     isLoading ||
-    isMessageLimitReached || // Add message limit check
+    // isMessageLimitReached || // Remove old frontend limit check
     (!input.trim() && selectedFiles.length === 0);
 
   // Handle keydown for Cmd/Ctrl+Enter
@@ -342,7 +345,7 @@ export function ChatInput({
                           e.target.style.overflowY =
                             e.target.scrollHeight > 200 ? "auto" : "hidden"; // Show scrollbar if very tall
                         }}
-                        disabled={isLoading}
+                        disabled={isLoading || disabled} // Apply disabled prop
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
                         onPaste={handlePaste} // Add paste handler
@@ -384,7 +387,7 @@ export function ChatInput({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
-                          disabled={isLoading}
+                          disabled={isLoading || disabled} // Apply disabled prop
                           onClick={() => setIsModalOpen(true)} // Open modal
                           aria-label="Fullscreen mode"
                         >
@@ -396,7 +399,7 @@ export function ChatInput({
                           size="icon"
                           className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
                           disabled={
-                            isLoading || selectedFiles.length >= maxFiles
+                            disabled || isLoading || selectedFiles.length >= maxFiles // Apply disabled prop
                           } // Use maxFiles from hook
                           onClick={triggerFileInput}
                           aria-label="Attach file"
@@ -409,7 +412,7 @@ export function ChatInput({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
-                          disabled={isLoading}
+                          disabled={isLoading || disabled} // Apply disabled prop
                           aria-label="Voice input"
                         >
                           <Mic className="h-4 w-4" />
@@ -468,6 +471,7 @@ export function ChatInput({
         maxFiles={maxFiles}
         maxTotalSizeMB={maxTotalSizeMB}
         totalSelectedSizeMB={totalSelectedSizeMB}
+        disabled={disabled} // Pass disabled prop down
       />
     </>
   );
