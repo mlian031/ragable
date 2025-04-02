@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
+import "katex/dist/katex.min.css"; // Import KaTeX CSS
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { TopRightMenu } from '@/components/TopRightMenu'; // Added import
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,10 +24,14 @@ const playfair = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "Ragable - AI Chat with Sources",
-  description: "A modern AI chat interface with source citations and references",
+  description:
+    "A modern AI chat interface with source citations and references",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -37,13 +41,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased min-h-screen`}
       >
-        <ThemeProvider 
-          attribute="class" 
-          defaultTheme="system" 
-          enableSystem 
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
           disableTransitionOnChange
         >
-          <TopRightMenu /> {/* Added Menu Component */}
           {children}
           <Toaster />
         </ThemeProvider>

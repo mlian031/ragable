@@ -1,0 +1,21 @@
+# Exclude node_modules (Docker will run pnpm install)
+node_modules
+
+# Exclude local build artifacts and Next.js build output
+.next
+out
+
+# Exclude environment files
+.env
+.env.*
+.env.local
+.env.prod
+.env.staging
+
+# Exclude log files
+logs
+*.log
+
+# OS/editor specific files
+.DS_Store
+*.swp

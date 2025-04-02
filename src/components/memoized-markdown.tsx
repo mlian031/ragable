@@ -3,7 +3,9 @@
 import { marked } from 'marked';
 import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm'; // Import remark-gfm
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math'; // Import remark-math
+import rehypeKatex from 'rehype-katex'; // Import rehype-katex
 
 // Helper function to parse markdown into blocks using marked
 function parseMarkdownIntoBlocks(markdown: string): string[] {
@@ -17,8 +19,12 @@ function parseMarkdownIntoBlocks(markdown: string): string[] {
 // Memoized component for rendering a single markdown block
 const MemoizedMarkdownBlock = memo(
   ({ content }: { content: string }) => {
-    // Render the block using ReactMarkdown with GFM plugin
-    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
+    // Render the block using ReactMarkdown with GFM, Math, and Katex plugins
+    return (
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+        {content}
+      </ReactMarkdown>
+    );
   },
   // Custom comparison function: only re-render if content changes
   (prevProps, nextProps) => {
