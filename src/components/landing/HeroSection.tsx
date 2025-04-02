@@ -46,7 +46,7 @@ export default function HeroSection() {
           </p>
 
           {/* University logos are already updated */}
-          <div className="flex flex-wrap justify-center items-center gap-8 mt-8">
+          <div className="flex flex-row justify-center items-center gap-8 mt-8">
             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
               <Image
                 src="/university-logos/uoftoronto.png"
@@ -81,6 +81,15 @@ export default function HeroSection() {
                 width={100}
                 height={40}
                 className="h-10 w-auto object-contain"
+              />
+            </div>
+            <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
+              <Image
+                src="/university-logos/uqueens.png"
+                alt="Partner Logo"
+                width={100}
+                height={40}
+                className="h-12 w-auto object-contain"
               />
             </div>
           </div>

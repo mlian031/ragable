@@ -41,6 +41,8 @@
     "@radix-ui/react-toggle-group": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
     "@rdkit/rdkit": "2024.3.5-1.0.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.4",
     "@tabler/icons-react": "^3.31.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "ai": "^4.2.6",

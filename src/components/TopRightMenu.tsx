@@ -1,37 +1,43 @@
-import React from "react";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge"; // Use Badge component
-import { ArrowUpRight } from "lucide-react";
+'use client'; // Needs to be a client component for SignOutButton interaction later
 
-export function TopRightMenu() {
+import React from 'react';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { LogIn, User as UserIcon } from 'lucide-react';
+import { type User } from '@supabase/supabase-js'; // Import User type
+import { Button } from './ui/button'; // Import Button for Sign In link
+import { SignOutButton } from './SignOutButton'; // Import the SignOutButton
 
+// Define props for the component
+interface TopRightMenuProps {
+  user: User | null;
+}
+
+export function TopRightMenu({ user }: TopRightMenuProps) { // Accept user prop
   return (
-    <div className="absolute top-4 right-4 p-4">
-      <div className="flex flex-row space-x-4 backdrop-blur-lg bg-white/30 rounded-lg p-2">
-        <div className="px-2">
-          <Badge variant="outline" className="px-4 flex flex-row">
-            <Link href="/" className="hover:underline underline-offset-4">
-              Back
-            </Link>
-            <ArrowUpRight />
-          </Badge>
-        </div>
-        <div className="px-2">
-          <Badge variant="outline" className="px-4 flex flex-row">
-            <Link href="/about" className="hover:underline underline-offset-4">
-              Settings
-            </Link>
-            <ArrowUpRight />
-          </Badge>
-        </div>
-        <div className="px-2">
-          <Badge variant="outline" className="px-4 flex flex-row">
-            <Link href="/account" className="hover:underline underline-offset-4">
-              Account
-            </Link>
-            <ArrowUpRight />
-          </Badge>
-        </div>
+    <div className="absolute top-4 right-4 z-50"> {/* Added z-index */}
+      <div className="flex flex-row items-center space-x-2 backdrop-blur-lg bg-background/80 rounded-lg p-2 border"> {/* Adjusted styling */}
+        {user ? (
+          <>
+            {/* Display user email or placeholder */}
+            <Badge variant="secondary" className="px-2 py-1 text-xs flex items-center space-x-1">
+              <UserIcon className="h-3 w-3" />
+              <span>{user.email || 'Account'}</span>
+            </Badge>
+            {/* Use the actual SignOutButton component */}
+            <SignOutButton />
+          </>
+        ) : (
+          // Show Sign In link if not logged in
+          <Link href="/login" passHref>
+            <Button variant="ghost" size="sm" className="flex items-center space-x-1 px-2 py-1 h-auto text-xs">
+              <LogIn className="h-3 w-3" />
+              <span>Sign In</span>
+            </Button>
+          </Link>
+        )}
+        {/* Optional: Keep other links like Settings if needed */}
+        {/* <div className="px-1"> ... Settings Link ... </div> */}
       </div>
     </div>
   );

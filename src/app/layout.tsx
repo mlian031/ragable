@@ -4,6 +4,8 @@ import { Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { TopRightMenu } from "@/components/TopRightMenu"; // Import TopRightMenu
+import { createClient } from "@/utils/supabase/client"; // Import server client
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +29,7 @@ export const metadata: Metadata = {
     "A modern AI chat interface with source citations and references",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

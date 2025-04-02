@@ -1,9 +1,11 @@
 'use client';
 
 import * as React from 'react';
+import { useState, useEffect } from 'react'; // Import useState and useEffect
 // Link import is not needed
 import { useChat, type Message } from '@ai-sdk/react';
 import { Cpu, TriangleAlert } from 'lucide-react'; // Removed unused: Copy, Edit, FileText, ImageIcon, RotateCw
+import type { User } from '@supabase/supabase-js'; // Import User type
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,6 +23,7 @@ import { MessagePartRenderer } from '@/components/MessagePartRenderer';
 // Removed unused: SearchResult, AppSource
 import { cn } from '@/lib/utils'; // Removed unused: truncateFileName
 import { TopRightMenu } from '@/components/TopRightMenu';
+import { createClient } from '@/utils/supabase/client';
 
 // --- Type Definitions ---
 
@@ -72,11 +75,13 @@ export default function Chat() {
   const [tokenUsage, setTokenUsage] = React.useState<Map<string, number>>(
     new Map(),
   );
-  const [editingIndex, setEditingIndex] = React.useState<number | null>(null);
-  const [editedContent, setEditedContent] = React.useState<string>('');
-  const [activeModes, setActiveModes] = React.useState<Set<string>>(new Set());
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editedContent, setEditedContent] = useState<string>('');
+  const [activeModes, setActiveModes] = useState<Set<string>>(new Set());
   // State to hold attachments temporarily before adding to the message
-  const [pendingAttachments, setPendingAttachments] = React.useState<LocalAttachmentInfo[] | null>(null);
+  const [pendingAttachments, setPendingAttachments] = useState<LocalAttachmentInfo[] | null>(null);
+  // State to hold the authenticated user
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // --- AI SDK Chat Hook ---
   const {
@@ -290,11 +295,31 @@ export default function Chat() {
     }
   }, [messages, pendingAttachments, setMessages]); // Dependencies
 
+  // --- User Authentication ---
+  const supabase = createClient();
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (error) {
+        console.error('Error fetching user:', error);
+        // Optionally handle the error, e.g., show a toast
+      } else {
+        setCurrentUser(user);
+      }
+    };
+
+    fetchUser();
+  }, [supabase]); // Dependency on supabase client instance
+
   // --- Render Logic ---
 
   return (
     <TooltipProvider delayDuration={100}>
-      <TopRightMenu /> 
+      {/* Pass the currentUser state to TopRightMenu */}
+      <TopRightMenu user={currentUser} />
       <div className="flex min-h-screen flex-col max-w-4xl mx-auto px-4 py-8 md:px-6 md:py-12">
         {/* Chat Messages Area */}
         <div className="flex-grow overflow-y-auto mb-4 pb-24 w-full">

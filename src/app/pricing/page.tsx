@@ -143,6 +143,7 @@ const universityLogos = [
   { src: '/university-logos/uottawa.png', alt: 'University of Ottawa Logo', width: 140, height: 40 },
   { src: '/university-logos/uvirginiatech.png', alt: 'Virginia Tech Logo', width: 160, height: 40 },
   { src: '/university-logos/uwaterloo.png', alt: 'University of Waterloo Logo', width: 150, height: 40 },
+  { src: '/university-logos/uqueens.png', alt: 'Queen\'s University Logo', width: 150, height: 40 },
 ];
 
 export default function PricingPage() {
@@ -156,7 +157,7 @@ export default function PricingPage() {
         {/* Hero Section */}
         <section className="container mx-auto flex flex-col items-center text-center py-16 md:py-24">
           <div className="max-w-2xl">
-          <h1 className="text-4xl font-bold tracking-tight lg:text-6xl xl:text-8xl max-w-3xl">
+          <h1 className="text-4xl font-bold tracking-tight lg:text-4xl xl:text-6xl max-w-3xl">
             Ignore the noise. Focus on what matters.
           </h1>
           </div>
@@ -194,7 +195,7 @@ export default function PricingPage() {
           </Tabs>
 
           {/* Pricing Cards Grid */}
-          <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-4 w-full max-w-6xl">
+          <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-3 w-full max-w-6xl">
             {currentTiers.map((tier) => (
               <Card key={tier.name} className={`flex flex-col rounded-lg border p-6 ${tier.popular ? 'border-primary' : ''}`}>
                 <CardHeader className="p-0 mb-4">
@@ -234,12 +235,13 @@ export default function PricingPage() {
                   </ul>
                 </CardContent>
                 {/* Footer can be used if needed later */}
-                {/* <CardFooter className="p-0 mt-auto">
-                </CardFooter> */}
+                <CardFooter className="p-0 mt-auto">
+                </CardFooter> 
               </Card>
             ))}
 
-             {/* Enterprise Card (Separate) */}
+            {/*
+            Enterprise Card (Separate)
              <Card className="flex flex-col rounded-lg border p-6 bg-muted/30 md:col-span-3 lg:col-span-1">
                 <CardHeader className="p-0 mb-4">
                     <h3 className="text-lg font-semibold">Enterprise</h3>
@@ -248,7 +250,6 @@ export default function PricingPage() {
                 <CardContent className="flex-1 p-0 mb-6">
                    <p className="text-lg font-medium mb-3">Includes everything in Team, plus:</p>
                    <ul className="space-y-2 text text-muted-foreground">
-                      {/* Assuming Enterprise gets all Team features plus these */}
                       <li className="flex items-start"><span className="mr-2 text-primary">✓</span><span>Everything in Team</span></li>
                       <li className="flex items-start"><span className="mr-2 text-primary">✓</span><span>Volume Discounts</span></li>
                       <li className="flex items-start"><span className="mr-2 text-primary">✓</span><span>Custom Integrations</span></li>
@@ -260,7 +261,8 @@ export default function PricingPage() {
                 <CardFooter className="p-0 mt-auto">
                    <Button className="w-full" variant="outline">Contact Sales</Button>
                 </CardFooter>
-             </Card>
+             </Card> 
+             */}
           </div>
         </section>
       </main>
