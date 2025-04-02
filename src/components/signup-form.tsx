@@ -28,7 +28,7 @@ export function SignupForm({
         setMessage("Check your email for the magic link")
       }
     } catch (error) {
-      setMessage("An error occurred. Please try again.")
+      setMessage(`An error occurred. Please try again. Error: ${error}`)
     } finally {
       setIsLoading(false)
     }
@@ -39,7 +39,7 @@ export function SignupForm({
     try {
       await signInWithGoogle()
     } catch (error) {
-      setMessage("An error occurred with Google sign in.")
+      setMessage(`An error occurred with Google sign in. Error: ${error}`)
       setIsLoading(false)
     }
   }
@@ -49,7 +49,7 @@ export function SignupForm({
     try {
       await signInWithDiscord()
     } catch (error) {
-      setMessage("An error occurred with Discord sign in.")
+      setMessage(`An error occurred with Discord sign in. Error: ${error}`)
       setIsLoading(false)
     }
   }

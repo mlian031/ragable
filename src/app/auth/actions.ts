@@ -1,6 +1,5 @@
 'use server'
 
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server'; // For user session handling
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'; // For admin client
@@ -46,7 +45,6 @@ export async function signInWithGoogle() {
 export async function deleteUserAccount() {
   'use server'; // Ensure this runs on the server
 
-  const cookieStore = cookies();
   const supabase = await createClient(); // Use the standard server client first to get the user
 
   const {
