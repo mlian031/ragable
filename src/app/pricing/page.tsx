@@ -192,7 +192,7 @@ export default function PricingPage() {
             <Terminal className="h-4 w-4" /> {/* Icon */}
             <AlertTitle>Heads up!</AlertTitle>
             <AlertDescription className=''>
-              <span>We're working hard to get automated payments and self checkout working!</span>
+              <span>We&apos;re working hard to get automated payments and self checkout working!</span>
              <span> To upgrade your plan in the meantime, please drop Mike a ping on our{' '} <a href="https://discord.gg/bzTEStMhER" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-4">community Discord.</a> Psst. Look for the guy with [Ragable] in his name.</span>
             </AlertDescription>
           </Alert>

@@ -24,7 +24,6 @@ import { MessagePartRenderer } from '@/components/MessagePartRenderer';
 import { cn } from '@/lib/utils'; // Removed unused: truncateFileName
 import { TopRightMenu } from '@/components/TopRightMenu';
 import { createClient } from '@/utils/supabase/client';
-import { set } from 'lodash';
 import Link from 'next/link';
 
 // --- Type Definitions ---

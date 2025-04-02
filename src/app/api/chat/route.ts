@@ -51,7 +51,7 @@ export async function POST(req: Request): Promise<Response> {
     }
 
     // Fetch user profile
-    let { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('plan_id, daily_message_count, last_message_reset_at')
       .eq('id', user.id)
