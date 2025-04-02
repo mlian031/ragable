@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   // Add the compiler option here
   compiler: {
     // Remove all console logs except console.error in production
-    // removeConsole: true, // You could also configure specific removals, e.g., { exclude: ['error'] }
+    removeConsole: true, // You could also configure specific removals, e.g., { exclude: ['error'] }
   },
   /* other config options */
   webpack: (config, { isServer }) => {
