@@ -1,7 +1,6 @@
 import Header from "@/components/landing/Header";
 import HeroSection from "@/components/landing/HeroSection";
 import FeatureSection from "@/components/landing/FeatureSection";
-// Removed FeaturesGrid import for now, will add BenchmarkChart later
 import FaqSection from "@/components/landing/FAQ";
 import * as Icons from "lucide-react";
 import CtaSection from "@/components/landing/CTASection";
