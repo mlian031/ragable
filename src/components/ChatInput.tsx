@@ -72,7 +72,7 @@ export function ChatInput({
 }: ChatInputProps) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null); // Keep this ref
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for fullscreen modal
@@ -88,6 +88,87 @@ export function ChatInput({
     maxTotalSizeMB,
     allowedMimeTypes,
   } = useFileHandling();
+
+  // --- START: Clipboard Paste Handling ---
+  const handlePaste = useCallback(
+    async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      let imagePasted = false; // Flag to check if an image was processed
+
+      console.log(imagePasted)
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+
+        if (item.kind === "file" && item.type.startsWith("image/")) {
+          event.preventDefault(); // Prevent default paste only if an image is found
+          imagePasted = true;
+          const file = item.getAsFile();
+
+          if (!file) {
+            toast({
+              title: "Paste Error",
+              description: "Could not retrieve pasted image file.",
+              variant: "destructive",
+            });
+            continue; // Skip to next item
+          }
+
+          // --- Validation ---
+          if (!allowedMimeTypes.includes(file.type)) {
+            toast({
+              title: "Unsupported File Type",
+              description: `Pasted image type (${file.type}) is not allowed.`,
+              variant: "destructive",
+            });
+            continue;
+          }
+
+          if (selectedFiles.length >= maxFiles) {
+            toast({
+              title: "File Limit Reached",
+              description: `You can only attach up to ${maxFiles} files.`,
+              variant: "destructive",
+            });
+            continue; // Don't break, allow checking other items if needed
+          }
+
+          const fileSizeMB = file.size / 1024 / 1024;
+          // Ensure totalSelectedSizeMB is treated as a number for comparison
+          if (parseFloat(totalSelectedSizeMB) + fileSizeMB > maxTotalSizeMB) {
+            toast({
+              title: "Total Size Limit Exceeded",
+              description: `Adding this image would exceed the total size limit of ${maxTotalSizeMB}MB.`,
+              variant: "destructive",
+            });
+            continue;
+          }
+          // --- End Validation ---
+
+          // Add the valid file
+          setSelectedFiles((prevFiles) => [...prevFiles, file]);
+
+          toast({
+            title: "Image Pasted",
+            description: `"${file.name}" added as an attachment.`,
+          });
+        }
+      }
+      // If no image was pasted, allow default paste behavior for text, etc.
+    },
+    [
+      selectedFiles,
+      setSelectedFiles,
+      allowedMimeTypes,
+      maxFiles,
+      maxTotalSizeMB,
+      totalSelectedSizeMB,
+      toast,
+    ]
+  );
+  // --- END: Clipboard Paste Handling ---
 
   // Focus input field on mount or when modal closes
   useEffect(() => {
@@ -264,6 +345,7 @@ export function ChatInput({
                         disabled={isLoading}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
+                        onPaste={handlePaste} // Add paste handler
                       />
                     </div>
                     <div className="flex-none text-right">
