@@ -32,9 +32,6 @@ const tools = {
  * @param {Request} req - The incoming request object.
  * @returns {Promise<Response>} A promise that resolves to the streaming response or an error response.
  */
-
-const FREE_PLAN_LIMIT = 10; // Define the message limit for the free plan
-
 export async function POST(req: Request): Promise<Response> {
   const supabase = await createClient(); // Create Supabase client instance
 
@@ -50,59 +47,47 @@ export async function POST(req: Request): Promise<Response> {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch user profile
-    const { data: profile, error: profileError } = await supabase
+    // Fetch user's plan ID
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('plan_id, daily_message_count, last_message_reset_at')
+      .select('plan_id')
       .eq('id', user.id)
       .single();
 
-    if (profileError || !profile) {
+    if (profileError || !profileData) {
       console.error('[API Profile Error]', profileError);
-      // Handle case where profile might not exist yet (though trigger should handle it)
       return NextResponse.json(
         { error: 'Could not retrieve user profile.' },
         { status: 500 }
       );
     }
 
-    let shouldUpdateProfile = false; // Flag to track if profile needs DB update
+    const planId = profileData.plan_id;
 
-    // Check usage for free plan users
-    if (profile.plan_id === 'free') {
-      const now = new Date();
-      const lastReset = new Date(profile.last_message_reset_at);
-      const timeDiffHours = (now.getTime() - lastReset.getTime()) / (1000 * 60 * 60);
+    // Check usage limit for free plan users via DB function
+    if (planId === 'free') {
+      const { data: usageStatus, error: rpcError } = await supabase.rpc(
+        'check_and_update_user_usage',
+        { p_user_id: user.id }
+      );
 
-      // Reset daily count if 24 hours have passed
-      if (timeDiffHours >= 24) {
-        console.log(`[API Usage] Resetting daily count for user ${user.id}`);
-        profile.daily_message_count = 0;
-        profile.last_message_reset_at = now.toISOString();
-        shouldUpdateProfile = true; // Mark profile for update
+      if (rpcError) {
+        console.error('[API Usage Check RPC Error]', rpcError);
+        return NextResponse.json(
+          { error: 'Error checking usage limit.' },
+          { status: 500 }
+        );
       }
 
-      // Check if limit is reached *after* potential reset
-      if (profile.daily_message_count >= FREE_PLAN_LIMIT) {
-        console.log(`[API Usage] Daily limit reached for user ${user.id}`);
-        // Update profile if reset happened before hitting limit check
-        if (shouldUpdateProfile) {
-           supabase
-            .from('profiles')
-            .update({
-              daily_message_count: profile.daily_message_count,
-              last_message_reset_at: profile.last_message_reset_at,
-            })
-            .eq('id', user.id)
-            .then(({ error: updateError }) => {
-              if (updateError) console.error('[API Usage] Error updating profile on limit reached:', updateError);
-            });
-        }
+      console.log(`[API Usage Check] Status for user ${user.id}: ${usageStatus}`);
+
+      if (usageStatus === 'limit_reached') {
         return NextResponse.json(
           { error: 'Daily limit reached. Please upgrade your plan.' },
           { status: 429 }
         );
       }
+      // 'ok' or 'not_free_plan' (handled by initial check) or 'profile_not_found' (handled by profile fetch) allows proceeding
     }
     // --- End Authentication and Usage Check ---
 
@@ -141,26 +126,21 @@ export async function POST(req: Request): Promise<Response> {
     });
 
     // --- Increment Usage Count (After successful AI call initiation) ---
-    if (profile && profile.plan_id === 'free') {
-      // Increment count locally first for immediate reflection if needed elsewhere
-      profile.daily_message_count += 1;
-      shouldUpdateProfile = true; // Mark for update
-
-      // Asynchronously update the database - don't block the response
+    if (planId === 'free') {
+      // Asynchronously increment the message count via DB function
       supabase
-        .from('profiles')
-        .update({
-          daily_message_count: profile.daily_message_count,
-          // Only update last_message_reset_at if it was changed during reset check
-          ...(profile.last_message_reset_at !== (await supabase.from('profiles').select('last_message_reset_at').eq('id', user.id).single()).data?.last_message_reset_at ? { last_message_reset_at: profile.last_message_reset_at } : {})
-        })
-        .eq('id', user.id)
+        .rpc('increment_user_message_count', { p_user_id: user.id })
         .then(({ error: incrementError }) => {
           if (incrementError) {
-            console.error('[API Usage] Error incrementing message count:', incrementError);
+            console.error(
+              '[API Usage] Error incrementing message count via RPC:',
+              incrementError
+            );
             // Consider logging this failure more robustly
           } else {
-            console.log(`[API Usage] Incremented message count for user ${user.id} to ${profile.daily_message_count}`);
+            console.log(
+              `[API Usage] Incremented message count via RPC for user ${user.id}`
+            );
           }
         });
     }
