@@ -64,32 +64,46 @@ export async function POST(req: Request): Promise<Response> {
 
     const planId = profileData.plan_id;
 
-    // Check usage limit for free plan users via DB function
+    // Check usage limit AND increment atomically for free plan users via DB function
     if (planId === 'free') {
+      // Call the NEW combined function
       const { data: usageStatus, error: rpcError } = await supabase.rpc(
-        'check_and_update_user_usage',
+        'atomic_check_and_increment_usage', // <--- Use the new function name
         { p_user_id: user.id }
       );
 
       if (rpcError) {
-        console.error('[API Usage Check RPC Error]', rpcError);
+        console.error('[API Usage Check/Increment RPC Error]', rpcError);
         return NextResponse.json(
           { error: 'Error checking usage limit.' },
           { status: 500 }
         );
       }
 
-      console.log(`[API Usage Check] Status for user ${user.id}: ${usageStatus}`);
+      console.log(`[API Usage Check/Increment] Status for user ${user.id}: ${usageStatus}`);
 
+      // Handle the possible return statuses
       if (usageStatus === 'limit_reached') {
-        return NextResponse.json(
-          { error: 'Daily limit reached. Please upgrade your plan.' },
-          { status: 429 }
-        );
+        return new Response(
+          'Daily limit reached. Please upgrade your plan.', {status: 429}
+        )
       }
-      // 'ok' or 'not_free_plan' (handled by initial check) or 'profile_not_found' (handled by profile fetch) allows proceeding
+      // If status is 'profile_not_found', it should have been caught by the profile fetch earlier,
+      // but handling it defensively here might be wise depending on your exact needs.
+      // if (usageStatus === 'profile_not_found') {
+      //   return NextResponse.json({ error: 'User profile not found during usage check.' }, { status: 500 });
+      // }
+
+      // 'ok' means the user is under the limit and the count was incremented.
+      // 'not_free_plan' means no check/increment was needed.
+      // In both 'ok' and 'not_free_plan' cases, we proceed.
+      if (usageStatus !== 'ok' && usageStatus !== 'not_free_plan') {
+         // Handle unexpected status if necessary
+         console.error(`[API Usage Check/Increment] Unexpected status: ${usageStatus}`);
+         return NextResponse.json({ error: 'Unexpected error during usage check.' }, { status: 500 });
+      }
     }
-    // --- End Authentication and Usage Check ---
+    // --- End Authentication and Usage Check/Increment ---
 
 
     // 1. Parse Request Body (moved after auth/usage check)
@@ -125,26 +139,9 @@ export async function POST(req: Request): Promise<Response> {
       }),
     });
 
-    // --- Increment Usage Count (After successful AI call initiation) ---
-    if (planId === 'free') {
-      // Asynchronously increment the message count via DB function
-      supabase
-        .rpc('increment_user_message_count', { p_user_id: user.id })
-        .then(({ error: incrementError }) => {
-          if (incrementError) {
-            console.error(
-              '[API Usage] Error incrementing message count via RPC:',
-              incrementError
-            );
-            // Consider logging this failure more robustly
-          } else {
-            console.log(
-              `[API Usage] Incremented message count via RPC for user ${user.id}`
-            );
-          }
-        });
-    }
-    // --- End Increment Usage Count ---
+    // --- REMOVED: Separate Increment Usage Count Block ---
+    // The increment now happens atomically within the check above for free users.
+    // --- End REMOVED ---
 
 
     // 5. Return Streaming Response

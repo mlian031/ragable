@@ -100,8 +100,17 @@ export default function Chat() {
   } = useChat({
     api: '/api/chat',
     // maxSteps: 2, // Example: Allow multiple tool calls if needed
-    onError: () => {
-      setIsDailyLimitReached(true);
+    onError: (error) => {
+      // Check if the error is an Error instance and its message indicates the limit was reached
+      if (error instanceof Error && error.message.includes('Daily limit reached')) {
+        console.log('Received limit reached error message, setting daily limit reached.');
+        setIsDailyLimitReached(true); // Set the state to show the banner
+      } else {
+        // Log other unexpected errors
+        console.error('Chat API Error (Unhandled):', error);
+        // Optionally, show a generic error toast for other issues
+        // toast({ title: 'An unexpected error occurred', description: error.message || 'Please try again.', variant: 'destructive' });
+      }
     },
     onFinish: (message, options) => {
       console.log('Stream finished. Final assistant message:', message);
