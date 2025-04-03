@@ -1,0 +1,356 @@
+# Deployment Guide: ragable-v2 to Google Cloud Run via GitHub Actions & Cloud Deploy
+
+This document outlines the steps to configure a CI/CD pipeline for deploying the `ragable-v2` Next.js application to Google Cloud Run using GitHub Actions and Google Cloud Deploy.
+
+## Prerequisites
+
+*   Google Cloud Project (`ragable`) with the following APIs enabled:
+    *   Cloud Run API
+    *   Artifact Registry API
+    *   Cloud Build API
+    *   Cloud Deploy API
+*   Google Cloud Region: `us-central1`
+*   Artifact Registry Repository: `ragable-prod` (Full path: `us-central1-docker.pkg.dev/ragable/ragable-prod`)
+*   Cloud Deploy Delivery Pipeline Name: `ragable-v2` (This will be created later if it doesn't exist)
+*   Cloud Run Service Name: `ragable-uscentral1-prod` (This will be the target)
+*   GitHub Repository: `ragable-dev/ragable`
+*   Workload Identity Federation configured between GitHub and GCP.
+
+## Step 1: Create Dockerfile
+
+A multi-stage `Dockerfile` is used to build an optimized production image for the Next.js application using Node.js 22 LTS.
+
+```dockerfile
+# Dockerfile
+
+# 1. Install dependencies only when needed
+FROM node:22-alpine AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Install dependencies based on the preferred package manager
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile --prod=false
+
+# 2. Rebuild the source code only when needed
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+# Use pnpm build
+RUN npm install -g pnpm
+RUN pnpm build
+
+# 3. Production image, copy all the files and run next
+FROM node:22-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+# Set the HOSTNAME environment variable for Next.js to listen on all interfaces
+# Required for Cloud Run
+ENV HOSTNAME "0.0.0.0"
+
+# server.js is created by next build output tracing
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+CMD ["node", "server.js"]
+```
+
+## Step 2: Create Skaffold Configuration (`skaffold.yaml`)
+
+Cloud Deploy uses Skaffold to define the build process. This configuration tells Skaffold how to build the Docker image using our `Dockerfile`. Runtime configuration (like environment variables) is handled in the Cloud Deploy target definition.
+
+```yaml
+# skaffold.yaml
+apiVersion: skaffold/v4beta1
+kind: Config
+metadata:
+  name: ragable-v2
+build:
+  artifacts:
+    - image: ragable-v2-image # Placeholder name, Cloud Deploy replaces this
+      context: .
+      docker:
+        dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {} # Tag images with the git commit SHA
+# The 'manifests' section is removed as it's not needed for direct Cloud Run deploy
+# Skaffold generates the necessary manifest based on the 'deploy' section below.
+deploy:
+  cloudrun: {} # Deploy using Cloud Run. Project/Region are defined in Cloud Deploy targets.
+```
+
+## Step 3: Create Cloud Deploy Configuration (`clouddeploy.yaml`)
+
+This file defines the Cloud Deploy delivery pipeline and the target(s). Here, we define a single pipeline (`ragable-v2`) with one stage targeting a Cloud Run service named `prod` in the `us-central1` region. This target definition now also includes the runtime configuration for the Cloud Run service, such as the service account, environment variables, and secrets.
+
+```yaml
+# clouddeploy.yaml
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: ragable-v2 # Your pipeline name
+description: Deploys ragable-v2 to Cloud Run
+serialPipeline:
+  stages:
+  - targetId: prod
+    profiles: [] # No Skaffold profiles needed for this simple setup
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: prod # Target ID used in the pipeline stage
+description: Production Cloud Run service
+run:
+  location: projects/ragable/locations/us-central1 # GCP Project and Region
+  # Define runtime configurations for the Cloud Run service
+  configurations:
+    # Specify the runtime service account
+    serviceAccount: github-actions-deployer@ragable.iam.gserviceaccount.com
+    # Define environment variables
+    environmentVariables:
+      NEXT_PUBLIC_SITE_URL: "https://ragable.ca"
+      GOOGLE_VERTEX_PROJECT: "ragable"
+      GOOGLE_VERTEX_LOCATION: "us-central1"
+    # Define secrets to mount as environment variables
+    secretEnvironmentVariables:
+      - keyName: SUPABASE_SERVICE_ROLE_KEY
+        secretName: projects/ragable/secrets/supabase-service-role-key # Full secret resource name
+        versionName: latest # Use the latest version
+      - keyName: NEXT_SUPABASE_DB_PASSWORD
+        secretName: projects/ragable/secrets/supabase-db-password
+        versionName: latest
+      - keyName: NEXT_PUBLIC_SUPABASE_URL
+        secretName: projects/ragable/secrets/next-public-supabase-url
+        versionName: latest
+      - keyName: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        secretName: projects/ragable/secrets/next-public-supabase-anon-key
+        versionName: latest
+```
+
+**Important:** Apply this configuration (or any updates) to your Google Cloud project. Run the following command:
+
+```bash
+gcloud deploy apply --file clouddeploy.yaml --region=us-central1 --project=ragable
+```
+
+## Step 4: Configure Service Account, Secrets, and WIF
+
+This involves setting up the service account that Cloud Run will use, creating secrets for sensitive data, and configuring Workload Identity Federation (WIF) to allow GitHub Actions to securely authenticate to Google Cloud.
+
+### 4a. Grant Permissions to Runtime Service Account
+
+Grant the service account (`github-actions-deployer@ragable.iam.gserviceaccount.com`) permissions to access secrets and Vertex AI.
+
+```bash
+export PROJECT_ID="ragable"
+export SERVICE_ACCOUNT_EMAIL="github-actions-deployer@${PROJECT_ID}.iam.gserviceaccount.com"
+
+# Allow accessing secrets from Secret Manager
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
+  --role="roles/secretmanager.secretAccessor"
+
+# Allow using Vertex AI
+gcloud projects add-iam-policy-binding ${PROJECT_ID} \
+  --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" \
+  --role="roles/aiplatform.user"
+```
+
+### 4b. Create Secrets in Secret Manager
+
+Create the following secrets in Google Cloud Secret Manager (Console -> Security -> Secret Manager) within the `ragable` project:
+
+*   `supabase-service-role-key` -> Value: (Your actual service role key)
+*   `supabase-db-password` -> Value: (Your actual DB password)
+*   `next-public-supabase-url` -> Value: (Your actual Supabase URL)
+*   `next-public-supabase-anon-key` -> Value: (Your actual Supabase anon key)
+
+### 4c. Configure Workload Identity Federation (WIF)
+
+Run the following `gcloud` commands in your authenticated terminal or Cloud Shell to set up WIF, allowing GitHub Actions to impersonate the service account.
+
+**Variables:**
+
+```bash
+export PROJECT_ID="ragable"
+export REGION="us-central1"
+export GITHUB_OWNER="ragable-dev"
+export GITHUB_REPO="ragable"
+export POOL_ID="github-pool"
+export PROVIDER_ID="github-provider"
+export SERVICE_ACCOUNT_ID="github-actions-deployer"
+export SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com"
+```
+
+**Commands:**
+
+1.  **Enable IAM Credentials API:**
+    ```bash
+    gcloud services enable iamcredentials.googleapis.com --project=${PROJECT_ID}
+    ```
+2.  **Create Workload Identity Pool:**
+    ```bash
+    gcloud iam workload-identity-pools create ${POOL_ID} \
+      --project=${PROJECT_ID} \
+      --location="global" \
+      --display-name="GitHub Actions Pool"
+    ```
+3.  **Get Pool ID:**
+    ```bash
+    export WORKLOAD_IDENTITY_POOL_ID=$(gcloud iam workload-identity-pools describe ${POOL_ID} \
+      --project=${PROJECT_ID} \
+      --location="global" \
+      --format='value(name)')
+    ```
+4.  **Create Workload Identity Provider (with condition):**
+    ```bash
+    gcloud iam workload-identity-pools providers create-oidc ${PROVIDER_ID} \
+      --project=${PROJECT_ID} \
+      --location="global" \
+      --workload-identity-pool=${POOL_ID} \
+      --display-name="GitHub Actions Provider" \
+      --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository" \
+      --attribute-condition="attribute.repository == '${GITHUB_OWNER}/${GITHUB_REPO}'" \
+      --issuer-uri="https://token.actions.githubusercontent.com"
+    ```
+5.  **Create Service Account:**
+    ```bash
+    gcloud iam service-accounts create ${SERVICE_ACCOUNT_ID} \
+      --project=${PROJECT_ID} \
+      --display-name="GitHub Actions Deployer SA"
+    ```
+6.  **Grant Service Account Necessary Roles:**
+    ```bash
+    # Cloud Build Editor
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/cloudbuild.builds.editor"
+    # Artifact Registry Writer
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/artifactregistry.writer"
+    # Cloud Deploy Developer
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/clouddeploy.developer"
+    # Cloud Run Admin
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/run.admin"
+    # Service Account User (to act as runtime SA)
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/iam.serviceAccountUser"
+    ```
+7.  **Allow GitHub Actions to Impersonate Service Account:**
+    ```bash
+    gcloud iam service-accounts add-iam-policy-binding ${SERVICE_ACCOUNT_EMAIL} \
+      --project=${PROJECT_ID} \
+      --role="roles/iam.workloadIdentityUser" \
+      --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${GITHUB_OWNER}/${GITHUB_REPO}"
+    ```
+8.  **Get Provider Name and SA Email for GitHub Secrets:**
+    ```bash
+    export WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe ${PROVIDER_ID} --project=${PROJECT_ID} --location="global" --workload-identity-pool=${POOL_ID} --format='value(name)')
+    echo "WIF Provider Name (for GitHub Secret WIF_PROVIDER): ${WIF_PROVIDER}"
+    echo "Service Account Email (for GitHub Secret WIF_SERVICE_ACCOUNT): ${SERVICE_ACCOUNT_EMAIL}"
+    ```
+
+**GitHub Secrets:**
+
+Add the outputs from the last command as secrets in your `ragable-dev/ragable` repository settings (`Settings` > `Secrets and variables` > `Actions`):
+*   `WIF_PROVIDER`: Full provider name (e.g., `projects/123.../providers/github-provider`)
+*   `WIF_SERVICE_ACCOUNT`: Service account email (e.g., `github-actions-deployer@ragable.iam.gserviceaccount.com`)
+
+## Step 5: Create GitHub Actions Workflow (`.github/workflows/deploy.yml`)
+
+This workflow automates the build, push, and deploy process on pushes to the `main` branch.
+
+```yaml
+# .github/workflows/deploy.yml
+name: Deploy to Cloud Run via Cloud Deploy
+
+on:
+  push:
+    branches:
+      - main # Trigger deployment on pushes to the main branch
+
+env:
+  PROJECT_ID: ragable
+  REGION: us-central1
+  GAR_LOCATION: us-central1 # Artifact Registry location (can differ from REGION)
+  APP_NAME: ragable # Base name for image/service if needed, adjust as necessary
+  PIPELINE_NAME: ragable-v2
+  CLOUD_RUN_SERVICE_NAME: ragable-uscentral1-prod # Target service name
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write' # Needed for Workload Identity Federation
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Google Auth via WIF
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.WIF_PROVIDER }} # From GitHub secrets
+        service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }} # From GitHub secrets
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Docker Auth - Configure Docker to use gcloud credential helper
+      run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev --quiet
+
+    - name: Build and Push Container Image
+      run: |-
+        docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}" --file Dockerfile .
+        docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}"
+
+    - name: Create Cloud Deploy Release
+      id: create_release
+      uses: google-github-actions/create-cloud-deploy-release@v1
+      with:
+        delivery_pipeline: ${{ env.PIPELINE_NAME }}
+        region: ${{ env.REGION }}
+        skaffold_file: skaffold.yaml
+        # Pass the specific image built in the previous step
+        images: ${{ env.APP_NAME }}_image=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}
+        # Optional: Add description
+        # description: "Triggered by GitHub Actions commit ${{ github.sha }}"
+        name: "release-${{ github.sha }}" # Provide a release name based on commit SHA
+```
+
+## Next Steps
+
+1.  Commit and push these files (`Dockerfile`, `skaffold.yaml`, `clouddeploy.yaml`, `.github/workflows/deploy.yml`, `deploy.md`) to your `ragable-dev/ragable` GitHub repository.
+2.  Ensure the WIF setup (Step 4) is complete and the secrets are added to GitHub.
+3.  Apply the Cloud Deploy configuration to GCP using the command in Step 3.
+4.  Pushing to the `main` branch should now trigger the GitHub Action, build the image, and create a release in Cloud Deploy, which will then deploy to your Cloud Run service (`ragable-uscentral1-prod`).
+5.  Monitor the GitHub Actions run and the Cloud Deploy pipeline in the Google Cloud Console.

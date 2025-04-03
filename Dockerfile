@@ -1,81 +1,60 @@
-# Dockerfile for Next.js application using pnpm
+# Dockerfile
 
-# ---- Base Stage ----
-# Use Node.js 20 Alpine as a base image
-FROM node:20-alpine AS base
+# 1. Install dependencies only when needed
+FROM node:22-alpine AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 # Install pnpm
 RUN npm install -g pnpm
 
-# ---- Dependencies Stage ----
-# Install dependencies only when needed
-FROM base AS deps
+# Install dependencies based on the preferred package manager
+COPY package.json pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile --prod=false
+
+# 2. Rebuild the source code only when needed
+FROM node:22-alpine AS builder
 WORKDIR /app
-
-# Copy package manager files and other necessary config files
-COPY package.json pnpm-lock.yaml ./
-COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
-# Copy .env.local if needed for build-time environment variables (Next.js often handles this automatically)
-# COPY .env.local ./
-
-# Install dependencies using pnpm
-RUN pnpm install --frozen-lockfile
-
-# ---- Build Stage ----
-# Rebuild the source code only when needed
-FROM base AS builder
-WORKDIR /app
-
-# Copy dependencies from the previous stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json pnpm-lock.yaml ./
-COPY tsconfig.json next.config.ts postcss.config.mjs eslint.config.mjs ./
-
-# Copy the rest of the application source code
 COPY . .
 
-# Build the Next.js application
-# Ensure NEXT_PUBLIC_ variables are available during build if needed
-# You might need to pass them as build arguments if they are required at build time
-# Example: ARG NEXT_PUBLIC_SUPABASE_URL
-# ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+# Use pnpm build
+RUN npm install -g pnpm
 RUN pnpm build
 
-# Prune development dependencies
-RUN pnpm prune --prod
-
-# ---- Runner Stage ----
-# Production image, copy all the files and run next
-FROM node:20-alpine AS runner
+# 3. Production image, copy all the files and run next
+FROM node:22-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
+ENV NODE_ENV production
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# Set the user to 'nodejs' for better security
-# Create a non-root user and group
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy necessary files from the builder stage
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-# If you have a standalone build, you might need to copy the server.js file instead
-# COPY --from=builder /app/server.js ./server.js
+COPY --from=builder /app/public ./public
 
-# Change ownership of the working directory
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
 USER nextjs
 
 EXPOSE 3000
 
 ENV PORT 3000
-# ENV HOSTNAME "0.0.0.0" # Required for Cloud Run
+# Set the HOSTNAME environment variable for Next.js to listen on all interfaces
+# Required for Cloud Run
+ENV HOSTNAME "0.0.0.0"
 
-# Server.js is used to run the application in standalone mode.
-# If you are not using standalone mode, use the default pnpm start command
-# CMD ["node", "server.js"]
-CMD ["pnpm", "start"]
+# server.js is created by next build output tracing
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+CMD ["node", "server.js"]

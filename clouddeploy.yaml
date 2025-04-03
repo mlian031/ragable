@@ -1,0 +1,41 @@
+# clouddeploy.yaml
+apiVersion: deploy.cloud.google.com/v1
+kind: DeliveryPipeline
+metadata:
+  name: ragable-v2 # Your pipeline name
+description: Deploys ragable-v2 to Cloud Run
+serialPipeline:
+  stages:
+  - targetId: prod
+    profiles: [] # No Skaffold profiles needed for this simple setup
+---
+apiVersion: deploy.cloud.google.com/v1
+kind: Target
+metadata:
+  name: prod # Target ID used in the pipeline stage
+description: Production Cloud Run service
+run:
+  location: projects/ragable/locations/us-central1 # GCP Project and Region
+  # Define runtime configurations for the Cloud Run service
+  configurations:
+    # Specify the runtime service account
+    serviceAccount: github-actions-deployer@ragable.iam.gserviceaccount.com
+    # Define environment variables
+    environmentVariables:
+      NEXT_PUBLIC_SITE_URL: "https://ragable.ca"
+      GOOGLE_VERTEX_PROJECT: "ragable"
+      GOOGLE_VERTEX_LOCATION: "us-central1"
+    # Define secrets to mount as environment variables
+    secretEnvironmentVariables:
+      - keyName: SUPABASE_SERVICE_ROLE_KEY
+        secretName: projects/ragable/secrets/supabase-service-role-key # Full secret resource name
+        versionName: latest # Use the latest version
+      - keyName: NEXT_SUPABASE_DB_PASSWORD
+        secretName: projects/ragable/secrets/supabase-db-password
+        versionName: latest
+      - keyName: NEXT_PUBLIC_SUPABASE_URL
+        secretName: projects/ragable/secrets/next-public-supabase-url
+        versionName: latest
+      - keyName: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        secretName: projects/ragable/secrets/next-public-supabase-anon-key
+        versionName: latest

@@ -19,3 +19,20 @@ logs
 # OS/editor specific files
 .DS_Store
 *.swp
+
+# Exclude git
+.git
+
+# Exclude Dockerfile and docker-compose files
+Dockerfile
+docker-compose.yml
+docker-compose.override.yml
+docker-compose.prod.yml
+docker-compose.staging.yml
+.dockerignore
+# Exclude test files
+*.test.js
+*.test.ts
+*.test.jsx
+*.test.tsx
+
