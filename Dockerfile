@@ -20,6 +20,8 @@ WORKDIR /app
 # Declare build arguments needed during the build process
 ARG GOOGLE_VERTEX_PROJECT
 ARG GOOGLE_VERTEX_LOCATION
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -32,6 +34,8 @@ COPY . .
 # Set ENV variables within the builder stage so build process can access them
 ENV GOOGLE_VERTEX_PROJECT=${GOOGLE_VERTEX_PROJECT}
 ENV GOOGLE_VERTEX_LOCATION=${GOOGLE_VERTEX_LOCATION}
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 
 # Use pnpm build
 RUN npm install -g pnpm
