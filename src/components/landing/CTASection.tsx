@@ -9,10 +9,10 @@ export default function CTASection() {
     <>
     <div className="py-12"></div>
     <section className="relative overflow-hidden py-24 md:py-32">
-      <Image
-        src="/abstracts/grainient-2.png"
-        alt="Gradient Background"
-        fill
+     <Image
+       src="https://storage.googleapis.com/ragable-static/grainient-2.png"
+       alt="Gradient Background"
+       fill
         className="absolute inset-0 object-cover opacity-100 rounded-2xl"
         style={{
           backgroundSize: "cover",
@@ -27,11 +27,11 @@ export default function CTASection() {
         {/* Ensured text color and margin match */}
         <p className="text-lg text-white mb-10">Take agency over your learning and get started right now. No card required.</p>
         <Button variant="default"
-          className="text-xl font-medium p-6"
-          style={{
-            background: "url('/abstracts/grainient-2.png')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
+         className="text-xl font-medium p-6"
+         style={{
+           background: "url('https://storage.googleapis.com/ragable-static/grainient-2.png')",
+           backgroundSize: "cover",
+           backgroundPosition: "center",
           }} // Ensured button style matches
         >
         <Link

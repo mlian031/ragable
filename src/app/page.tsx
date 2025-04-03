@@ -29,10 +29,10 @@ const featureSections: FeatureData[] = [ // Removed export keyword
   {
     title: "Unparalleled AI Assistance",
     subtitle: "Powered by Gemini 2.5 Pro Augmented With Multimodal Tools",
-    description: "Experience the cutting edge of AI. Ragable leverages Google's Gemini 2.5 Pro, augmented with a vast resource base and specialized tools, to provide accurate, context-aware assistance for all your academic needs.",
-    imageUrl: "/abstracts/grainient-3.png", // Placeholder
-    imagePosition: "right",
-    className: "",
+   description: "Experience the cutting edge of AI. Ragable leverages Google's Gemini 2.5 Pro, augmented with a vast resource base and specialized tools, to provide accurate, context-aware assistance for all your academic needs.",
+   imageUrl: "https://storage.googleapis.com/ragable-static/grainient-3.png", // Placeholder
+   imagePosition: "right",
+   className: "",
     features: [
       {
         icon: "BrainCircuit",
@@ -53,11 +53,11 @@ const featureSections: FeatureData[] = [ // Removed export keyword
   },
   {
     title: "Advanced Study & Research Tools",
-    subtitle: "Visualize, Analyze, Cite, and Write Efficiently",
-    description: "Go beyond simple chat. Ragable offers specialized tools designed to accelerate your learning and research process, from complex visualizations to polished academic writing.",
-    imageUrl: "/abstracts/grainient-2.png", // Placeholder
-    imagePosition: "left",
-    className: "bg-gray-50",
+   subtitle: "Visualize, Analyze, Cite, and Write Efficiently",
+   description: "Go beyond simple chat. Ragable offers specialized tools designed to accelerate your learning and research process, from complex visualizations to polished academic writing.",
+   imageUrl: "https://storage.googleapis.com/ragable-static/grainient-2.png", // Placeholder
+   imagePosition: "left",
+   className: "bg-gray-50",
     features: [
        {
         icon: "FlaskConical",
@@ -93,11 +93,11 @@ const featureSections: FeatureData[] = [ // Removed export keyword
   },
   {
     title: "Streamlined Course Management",
-    subtitle: "Organize, Prepare, and Learn Smarter",
-    description: "Centralize your course materials and leverage AI to create personalized study aids. Spend less time organizing and more time learning.",
-    imageUrl: "/abstracts/grainient-1.png", // Placeholder
-    imagePosition: "right",
-    className: "",
+   subtitle: "Organize, Prepare, and Learn Smarter",
+   description: "Centralize your course materials and leverage AI to create personalized study aids. Spend less time organizing and more time learning.",
+   imageUrl: "https://storage.googleapis.com/ragable-static/grainient-1.png", // Placeholder
+   imagePosition: "right",
+   className: "",
     features: [
       {
         icon: "UploadCloud",

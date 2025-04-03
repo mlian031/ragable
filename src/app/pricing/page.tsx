@@ -141,11 +141,11 @@ const yearlyTiers: Tier[] = [
 ];
 
 const universityLogos = [
-  { src: '/university-logos/uoftoronto.png', alt: 'University of Toronto Logo', width: 150, height: 40 },
-  { src: '/university-logos/uottawa.png', alt: 'University of Ottawa Logo', width: 140, height: 40 },
-  { src: '/university-logos/uvirginiatech.png', alt: 'Virginia Tech Logo', width: 160, height: 40 },
-  { src: '/university-logos/uwaterloo.png', alt: 'University of Waterloo Logo', width: 150, height: 40 },
-  { src: '/university-logos/uqueens.png', alt: 'Queen\'s University Logo', width: 150, height: 40 },
+  { src: 'https://storage.googleapis.com/ragable-static/uoftoronto.png', alt: 'University of Toronto Logo', width: 150, height: 40 },
+  { src: 'https://storage.googleapis.com/ragable-static/uottawa.png', alt: 'University of Ottawa Logo', width: 140, height: 40 },
+  { src: 'https://storage.googleapis.com/ragable-static/uvirginiatech.png', alt: 'Virginia Tech Logo', width: 160, height: 40 },
+  { src: 'https://storage.googleapis.com/ragable-static/uwaterloo.png', alt: 'University of Waterloo Logo', width: 150, height: 40 },
+  { src: 'https://storage.googleapis.com/ragable-static/uqueens.png', alt: 'Queen\'s University Logo', width: 150, height: 40 },
 ];
 
 export default function PricingPage() {
@@ -230,10 +230,10 @@ export default function PricingPage() {
                     className="w-full mb-6"
                     variant={tier.buttonVariant}
                     disabled
-                    style={tier.name === 'Pro' ? {
-                      backgroundImage: `url('/abstracts/grainient-1.png')`,
-                      backgroundSize: 'cover', // Adjust as needed
-                      backgroundPosition: 'center', // Adjust as needed
+                   style={tier.name === 'Pro' ? {
+                     backgroundImage: `url('https://storage.googleapis.com/ragable-static/grainient-1.png')`,
+                     backgroundSize: 'cover', // Adjust as needed
+                     backgroundPosition: 'center', // Adjust as needed
                       color: 'white', // Ensure text is visible
                       border: 'none', // Remove default border if needed
                     } : {}}

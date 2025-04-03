@@ -88,7 +88,7 @@ export default function FeatureSection({
                   className="w-full rounded-lg"
                 />
                 {/* Conditionally add the overlay image */}
-                {imageUrl === "/abstracts/grainient-3.png" && (
+                {imageUrl === "https://storage.googleapis.com/ragable-static/grainient-3.png" && (
                   <Image
                     src="/abstracts/database-graphic.png"
                     alt="Database overlay"

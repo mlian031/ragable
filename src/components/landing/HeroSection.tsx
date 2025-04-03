@@ -30,7 +30,7 @@ export default function HeroSection() {
               variant="default"
               className="text-xl font-medium p-6 hover:opacity-80"
               style={{
-                background: "url('/abstracts/grainient-2.png')",
+                background: "url('https://storage.googleapis.com/ragable-static/grainient-2.png')",
                 backgroundSize: "cover",
                 backgroundPosition: "top",
               }}
@@ -47,47 +47,47 @@ export default function HeroSection() {
 
           {/* University logos are already updated */}
           <div className="flex flex-row justify-center items-center gap-8 mt-8">
-            <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
-              <Image
-                src="/university-logos/uoftoronto.png"
-                alt="Partner Logo"
-                width={100}
+             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
+               <Image
+                 src="https://storage.googleapis.com/ragable-static/uoftoronto.png"
+                 alt="Partner Logo"
+                 width={100}
                 height={40}
                 className="h-12 w-auto object-contain"
               />
             </div>
-            <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
-              <Image
-                src="/university-logos/uottawa.png"
-                alt="Partner Logo"
-                width={100}
+             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
+               <Image
+                 src="https://storage.googleapis.com/ragable-static/uottawa.png"
+                 alt="Partner Logo"
+                 width={100}
                 height={40}
                 className="h-10 w-auto object-contain"
               />
             </div>
-            <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
-              <Image
-                src="/university-logos/uvirginiatech.png"
-                alt="Partner Logo"
-                width={100}
+             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
+               <Image
+                 src="https://storage.googleapis.com/ragable-static/uvirginiatech.png"
+                 alt="Partner Logo"
+                 width={100}
                 height={40}
                 className="h-8 w-auto object-contain"
               />
             </div>
-            <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
-              <Image
-                src="/university-logos/uwaterloo.png"
-                alt="Partner Logo"
-                width={100}
+             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
+               <Image
+                 src="https://storage.googleapis.com/ragable-static/uwaterloo.png"
+                 alt="Partner Logo"
+                 width={100}
                 height={40}
                 className="h-10 w-auto object-contain"
               />
             </div>
-            <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
-              <Image
-                src="/university-logos/uqueens.png"
-                alt="Partner Logo"
-                width={100}
+             <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
+               <Image
+                 src="https://storage.googleapis.com/ragable-static/uqueens.png"
+                 alt="Partner Logo"
+                 width={100}
                 height={40}
                 className="h-12 w-auto object-contain"
               />

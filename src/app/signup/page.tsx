@@ -8,10 +8,10 @@ export default function SignupPage() {
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center gap-2 font-medium">
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
-              <Image
-                src="/abstracts/grainient-2.png"
-                alt="Logo"
-                className="h-6 w-6 rounded-md"
+             <Image
+               src="https://storage.googleapis.com/ragable-static/grainient-2.png"
+               alt="Logo"
+               className="h-6 w-6 rounded-md"
                 width={24}
                 height={24}
               />
@@ -26,10 +26,10 @@ export default function SignupPage() {
         </div>
       </div>
       <div className="bg-muted relative hidden lg:block">
-        <Image
-          src="/abstracts/grainient-2.png"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+       <Image
+         src="https://storage.googleapis.com/ragable-static/grainient-2.png"
+         alt="Image"
+         className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
           fill
           priority
         />
