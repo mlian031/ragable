@@ -38,17 +38,16 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     label: 'Plotting Enabled',
     commonLabel: 'Plotting',
     icon: LineChart,
-    systemPrompt: `Politely inform the user that this tool is not available in this environment. However, you can provide the python code to generate the plot using the displayCode tool. Make sure to include all necessary libraries and functions for the user to run it successfully.`,
-    // No system prompt needed for now
+    systemPrompt: `When the user discusses mathematical functions (e.g., mentions 'y = x^2', 'the sine wave', 'f(x) = 1/x') or explicitly asks to visualize mathematical data, proactively identify the relevant function expression(s). You MUST then use the displayPlot tool to visualize the identified function(s). Provide any relevant options (like title, axis labels, or domains if specified or easily inferred) to the tool.`,
   },
-  DOUBLE_CHECK: {
-    id: 'DOUBLE_CHECK',
-    label: 'Double Check Enabled',
-    commonLabel: 'Double Check',
-    icon: CheckCheck,
-    systemPrompt: `Politely inform the user this tool is not available in this environment.`
-    // No system prompt needed for now
-  },
+  // DOUBLE_CHECK: {
+  //   id: 'DOUBLE_CHECK',
+  //   label: 'Double Check Enabled',
+  //   commonLabel: 'Double Check',
+  //   icon: CheckCheck,
+  //   systemPrompt: `Politely inform the user this tool is not available in this environment.`
+  //   // No system prompt needed for now
+  // },
   ACADEMIC_WRITING: { // Added new mode
     id: 'ACADEMIC_WRITING',
     label: 'Academic Writing Assistant Enabled',

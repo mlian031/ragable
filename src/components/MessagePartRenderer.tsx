@@ -15,7 +15,11 @@ import { SearchResult, type Source as AppSource } from '@/components/SearchResul
 // Remove direct import of MoleculeDisplay
 // import MoleculeDisplay from '@/components/MoleculeDisplay';
 import { type DisplayMoleculeArgs } from '@/lib/tools/displayMoleculeTool'; // Import args type
+import { type DisplayPlotArgs } from '@/lib/tools/displayPlotTool'; // Import plot args type
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
+
+// Import PlotDisplay
+import { PlotDisplay } from '@/components/PlotDisplay';
 
 // Dynamically import MoleculeDisplay with no SSR
 const DynamicMoleculeDisplay = dynamic(
@@ -297,7 +301,64 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
               );
             }
 
-            // --- Tool: plot-function (Placeholder) ---
+            // --- Tool: displayPlot ---
+            if (toolName === 'displayPlot') {
+              if (!hasResult) {
+                // Loading state
+                return (
+                  <div
+                    key={`${message.id}-tool-${toolCallId}-loading`}
+                    className="my-2"
+                  >
+                    <Badge
+                      variant="outline"
+                      className="items-center text-xs font-normal"
+                    >
+                      <span className="mr-2 h-2 w-2 animate-pulse rounded-full bg-cyan-500"></span> {/* Changed color */}
+                      Generating plot...
+                    </Badge>
+                  </div>
+                );
+              }
+              // Result state
+              const plotResult = toolInvocation.result as ({ status: string; summary: string } & DisplayPlotArgs) | undefined;
+
+              if (plotResult?.status === 'error') {
+                return (
+                  <div
+                    key={`${message.id}-tool-${toolCallId}-error`}
+                    className="my-2 rounded bg-destructive/20 p-2 text-sm text-destructive-foreground"
+                  >
+                    Error generating plot: {plotResult.summary || 'Unknown error'}
+                  </div>
+                );
+              }
+
+              // Ensure args are valid before passing to component (check for 'data' array)
+              if (!plotResult || !plotResult.data || !Array.isArray(plotResult.data) || plotResult.data.length === 0) {
+                 console.error('Invalid data for PlotDisplay:', plotResult);
+                 return (
+                   <div
+                     key={`${message.id}-tool-${toolCallId}-invalid`}
+                     className="my-2 rounded bg-destructive/20 p-2 text-sm text-destructive-foreground"
+                   >
+                     Error: Received invalid data structure for plot display (missing or empty 'data' array).
+                   </div>
+                 );
+              }
+
+              return (
+                 <div
+                   key={`${message.id}-tool-${toolCallId}-result`}
+                   className="my-2" // Add margin or other styling as needed
+                 >
+                   <PlotDisplay args={plotResult} />
+                 </div>
+               );
+            }
+
+
+            // --- Tool: plot-function (Placeholder) --- - KEEPING THIS FOR NOW, MIGHT REMOVE LATER
             if (toolName === 'plot-function') {
               if (!hasResult) {
                 return (
