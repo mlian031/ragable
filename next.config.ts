@@ -4,6 +4,7 @@ import path from "path";
 // Removed bundle analyzer import and configuration for dev mode compatibility
 
 const nextConfig: NextConfig = {
+  output: 'standalone', // <--- Add this line
   // Add the compiler option here
   compiler: {
     // Remove all console logs except console.error in production
