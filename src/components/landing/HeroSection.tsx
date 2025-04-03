@@ -99,7 +99,7 @@ export default function HeroSection() {
         <div className="mt-16 max-w-5xl mx-auto relative">
           {/* Existing Image */}
           <Image
-            src="/abstracts/grainient-1-hero-cropped.png"
+            src={"https://storage.googleapis.com/ragable-static/grainient-1-hero-cropped.png"}
             alt="Ragable application screenshot"
             width={1080}
             height={600}
@@ -109,7 +109,7 @@ export default function HeroSection() {
 
           {/* Video Overlay */}
           <video
-            src="https://storage.googleapis.com/ragable-static-assets/cursorful-video-1743453394997.mp4"
+            src="https://storage.googleapis.com/ragable-static/hero-video.mp4"
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10/12 rounded-2xl shadow-lg z-10" // Position, size, style
             autoPlay
             loop
