@@ -1,25 +1,122 @@
 # Deployment Guide: ragable-v2 to Google Cloud Run via GitHub Actions & Cloud Deploy
 
-This document outlines the steps to configure a CI/CD pipeline for deploying the `ragable-v2` Next.js application to Google Cloud Run using GitHub Actions and Google Cloud Deploy.
+This document outlines the steps to configure a CI/CD pipeline for deploying the `ragable-v2` Next.js application (from the `ragable-dev/ragable` repository) to Google Cloud Run using GitHub Actions and Google Cloud Deploy.
 
 ## Prerequisites
 
-*   Google Cloud Project (`ragable`) with the following APIs enabled:
-    *   Cloud Run API
-    *   Artifact Registry API
-    *   Cloud Build API
-    *   Cloud Deploy API
-*   Google Cloud Region: `us-central1`
-*   Artifact Registry Repository: `ragable-prod` (Full path: `us-central1-docker.pkg.dev/ragable/ragable-prod`)
-*   Cloud Deploy Delivery Pipeline Name: `ragable-v2` (This will be created later if it doesn't exist)
-*   Cloud Run Service Name: `ragable-uscentral1-prod` (This will be the target)
-*   GitHub Repository: `ragable-dev/ragable`
-*   Workload Identity Federation configured between GitHub and GCP.
-*   `next.config.ts` configured with `output: 'standalone'` (See Step 1b).
+*   **Google Cloud Project:** `ragable`
+*   **Google Cloud Region:** `us-central1`
+*   **APIs Enabled:** Cloud Run, Artifact Registry, Cloud Build, Cloud Deploy, IAM Credentials, Secret Manager, AI Platform (Vertex AI).
+*   **Artifact Registry Repository:** `ragable-prod` (Full path: `us-central1-docker.pkg.dev/ragable/ragable-prod`)
+*   **Cloud Deploy Delivery Pipeline Name:** `ragable-v2`
+*   **Cloud Run Service Name:** `ragable-uscentral1-prod` (This is the name of the target service Cloud Deploy will manage).
+*   **GitHub Repository:** `ragable-dev/ragable`
+*   **Workload Identity Federation:** Configured between GitHub and GCP (See Step 4c).
+*   **Google Cloud Secrets:** Created in Secret Manager for sensitive runtime variables (See Step 4b).
+*   **GitHub Secrets:** Configured for WIF (`WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT`) and public build-time variables (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 
-## Step 1a: Create Dockerfile
+## Environment Variable Handling Summary
 
-A multi-stage `Dockerfile` is used to build an optimized production image for the Next.js application using Node.js 22 LTS. It includes build arguments (`ARG`) and environment variables (`ENV`) specifically for the build stage to make variables like `GOOGLE_VERTEX_PROJECT` available during `pnpm build`.
+This setup distinguishes between different types of environment variables:
+
+1.  **Build-Time Variables:** Required during the `pnpm build` step inside the Docker container. These are passed using `--build-arg` in the GitHub Actions workflow and declared with `ARG`/`ENV` in the `Dockerfile`'s `builder` stage.
+    *   `GOOGLE_VERTEX_PROJECT` (from workflow `env`)
+    *   `GOOGLE_VERTEX_LOCATION` (from workflow `env`)
+    *   `NEXT_PUBLIC_SUPABASE_URL` (from GitHub secret)
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (from GitHub secret)
+2.  **Runtime Variables (Non-Sensitive):** Required when the application is running on Cloud Run. These are configured directly in the `clouddeploy.yaml` target definition under `environmentVariables`.
+    *   `NEXT_PUBLIC_SITE_URL`
+    *   `GOOGLE_VERTEX_PROJECT`
+    *   `GOOGLE_VERTEX_LOCATION`
+3.  **Runtime Secrets (Sensitive):** Required when the application is running, but stored securely. These are stored in Google Cloud Secret Manager and mounted as environment variables via the `clouddeploy.yaml` target definition under `secretEnvironmentVariables`.
+    *   `SUPABASE_SERVICE_ROLE_KEY`
+    *   `NEXT_SUPABASE_DB_PASSWORD`
+    *   `NEXT_PUBLIC_SUPABASE_URL`
+    *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+*Note: `GOOGLE_APPLICATION_CREDENTIALS` is handled automatically by Cloud Run using the configured service account.*
+
+---
+
+## Step 1: Configure Next.js (`next.config.ts`)
+
+Ensure your `next.config.ts` includes the `output: 'standalone'` option. This is necessary for the Docker build process to create the optimized `.next/standalone` directory used in the final image stage.
+
+```typescript
+// next.config.ts
+import type { NextConfig } from "next";
+import CopyPlugin from "copy-webpack-plugin";
+import path from "path";
+// Removed bundle analyzer import and configuration for dev mode compatibility
+
+const nextConfig: NextConfig = {
+  output: 'standalone', // <--- Ensure this line is present
+  // Add the compiler option here
+  compiler: {
+    // Remove all console logs except console.error in production
+    removeConsole: true, // You could also configure specific removals, e.g., { exclude: ['error'] }
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
+        port: "",
+      }
+    ]
+  },
+  /* other config options */
+  webpack: (config, { isServer }) => {
+    // Add CopyPlugin to copy wasm file
+    config.plugins.push(
+      new CopyPlugin({
+        patterns: [
+          {
+            from: path.join(
+              path.dirname(require.resolve("@rdkit/rdkit/package.json")),
+              "dist/RDKit_minimal.wasm"
+            ),
+            // Correct the destination path to match locateFile in MoleculeDisplay
+            to: path.join(__dirname, "public/chunks"), // Change back to public/chunks
+          },
+          // Add pattern to copy the JS file as well
+          {
+            from: path.join(
+              path.dirname(require.resolve("@rdkit/rdkit/package.json")),
+              "dist/RDKit_minimal.js"
+            ),
+            to: path.join(__dirname, "public/chunks"), // Change back to public/chunks
+          },
+        ],
+      })
+    );
+
+    // Polyfill 'fs' module for browser environment
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false, // Tells webpack to provide an empty module for 'fs'
+      };
+    }
+
+    // Ensure WebAssembly is enabled
+    config.experiments = { ...config.experiments, asyncWebAssembly: true };
+
+    return config;
+  },
+};
+
+// Temporarily removed analyzer wrapping for dev mode
+// To analyze bundle, manually wrap in next.config.ts before running ANALYZE=true pnpm build
+// export default analyzer(nextConfig);
+export default nextConfig;
+```
+
+---
+
+## Step 2: Create Dockerfile (`Dockerfile`)
+
+A multi-stage `Dockerfile` builds an optimized production image using Node.js 22 LTS. It includes build arguments (`ARG`) and environment variables (`ENV`) for the build stage.
 
 ```dockerfile
 # Dockerfile
@@ -44,6 +141,8 @@ WORKDIR /app
 # Declare build arguments needed during the build process
 ARG GOOGLE_VERTEX_PROJECT
 ARG GOOGLE_VERTEX_LOCATION
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -56,6 +155,8 @@ COPY . .
 # Set ENV variables within the builder stage so build process can access them
 ENV GOOGLE_VERTEX_PROJECT=${GOOGLE_VERTEX_PROJECT}
 ENV GOOGLE_VERTEX_LOCATION=${GOOGLE_VERTEX_LOCATION}
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 
 # Use pnpm build
 RUN npm install -g pnpm
@@ -93,26 +194,11 @@ ENV HOSTNAME "0.0.0.0"
 CMD ["node", "server.js"]
 ```
 
-## Step 1b: Configure Next.js for Standalone Output (`next.config.ts`)
+---
 
-Ensure your `next.config.ts` includes the `output: 'standalone'` option. This is necessary for the Docker build process to create the optimized `.next/standalone` directory used in the final image stage.
+## Step 3: Create Skaffold Configuration (`skaffold.yaml`)
 
-```typescript
-// next.config.ts (Relevant part)
-import type { NextConfig } from "next";
-// ... other imports
-
-const nextConfig: NextConfig = {
-  output: 'standalone', // <--- Ensure this line is present
-  // ... other config options (compiler, images, webpack, etc.)
-};
-
-export default nextConfig;
-```
-
-## Step 2: Create Skaffold Configuration (`skaffold.yaml`)
-
-Cloud Deploy uses Skaffold to define the build process. This configuration tells Skaffold how to build the Docker image using our `Dockerfile`. Runtime configuration (like environment variables) is handled in the Cloud Deploy target definition.
+This file tells Cloud Deploy/Skaffold how to build the Docker image.
 
 ```yaml
 # skaffold.yaml
@@ -134,9 +220,11 @@ deploy:
   cloudrun: {} # Deploy using Cloud Run. Project/Region are defined in Cloud Deploy targets.
 ```
 
-## Step 3: Create Cloud Deploy Configuration (`clouddeploy.yaml`)
+---
 
-This file defines the Cloud Deploy delivery pipeline and the target(s). Here, we define a single pipeline (`ragable-v2`) with one stage targeting a Cloud Run service named `prod` in the `us-central1` region. This target definition now also includes the runtime configuration for the Cloud Run service, such as the service account, environment variables, and secrets.
+## Step 4: Create Cloud Deploy Configuration (`clouddeploy.yaml`)
+
+This file defines the Cloud Deploy delivery pipeline (`ragable-v2`) and the production target (`prod`). The target definition includes the runtime configuration for the Cloud Run service (service account, environment variables, secrets).
 
 ```yaml
 # clouddeploy.yaml
@@ -182,17 +270,19 @@ run:
         versionName: latest
 ```
 
-**Important:** Apply this configuration (or any updates) to your Google Cloud project. Run the following command:
+**Important:** Apply this configuration (or any updates) to your Google Cloud project before the first deployment attempt:
 
 ```bash
 gcloud deploy apply --file clouddeploy.yaml --region=us-central1 --project=ragable
 ```
 
-## Step 4: Configure Service Account, Secrets, and WIF
+---
 
-This involves setting up the service account that Cloud Run will use, creating secrets for sensitive data, and configuring Workload Identity Federation (WIF) to allow GitHub Actions to securely authenticate to Google Cloud.
+## Step 5: Configure Service Account, Secrets, and WIF
 
-### 4a. Grant Permissions to Runtime Service Account
+This involves setting up the service account, creating secrets, and configuring Workload Identity Federation (WIF).
+
+### 5a. Grant Permissions to Runtime Service Account
 
 Grant the service account (`github-actions-deployer@ragable.iam.gserviceaccount.com`) permissions to access secrets and Vertex AI.
 
@@ -211,7 +301,7 @@ gcloud projects add-iam-policy-binding ${PROJECT_ID} \
   --role="roles/aiplatform.user"
 ```
 
-### 4b. Create Secrets in Secret Manager
+### 5b. Create Secrets in Secret Manager
 
 Create the following secrets in Google Cloud Secret Manager (Console -> Security -> Secret Manager) within the `ragable` project:
 
@@ -220,7 +310,7 @@ Create the following secrets in Google Cloud Secret Manager (Console -> Security
 *   `next-public-supabase-url` -> Value: (Your actual Supabase URL)
 *   `next-public-supabase-anon-key` -> Value: (Your actual Supabase anon key)
 
-### 4c. Configure Workload Identity Federation (WIF)
+### 5c. Configure Workload Identity Federation (WIF)
 
 Run the following `gcloud` commands in your authenticated terminal or Cloud Shell to set up WIF, allowing GitHub Actions to impersonate the service account.
 
@@ -286,6 +376,8 @@ export SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceac
     gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/run.admin"
     # Service Account User (to act as runtime SA)
     gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/iam.serviceAccountUser"
+    # Storage Admin (to allow Cloud Deploy to create GCS buckets for artifacts)
+    gcloud projects add-iam-policy-binding ${PROJECT_ID} --member="serviceAccount:${SERVICE_ACCOUNT_EMAIL}" --role="roles/storage.admin"
     ```
 7.  **Allow GitHub Actions to Impersonate Service Account:**
     ```bash
@@ -306,8 +398,12 @@ export SERVICE_ACCOUNT_EMAIL="${SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceac
 Add the outputs from the last command as secrets in your `ragable-dev/ragable` repository settings (`Settings` > `Secrets and variables` > `Actions`):
 *   `WIF_PROVIDER`: Full provider name (e.g., `projects/123.../providers/github-provider`)
 *   `WIF_SERVICE_ACCOUNT`: Service account email (e.g., `github-actions-deployer@ragable.iam.gserviceaccount.com`)
+*   `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL (needed for build)
+*   `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase anon key (needed for build)
 
-## Step 5: Create GitHub Actions Workflow (`.github/workflows/deploy.yml`)
+---
+
+## Step 6: Create GitHub Actions Workflow (`.github/workflows/deploy.yml`)
 
 This workflow automates the build, push, and deploy process on pushes to the `main` branch. It passes necessary build arguments (`--build-arg`) during the `docker build` step.
 
@@ -360,6 +456,8 @@ jobs:
         docker build \
           --build-arg GOOGLE_VERTEX_PROJECT=${{ env.PROJECT_ID }} \
           --build-arg GOOGLE_VERTEX_LOCATION=${{ env.REGION }} \
+          --build-arg NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }} \
+          --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }} \
           -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}" \
           --file Dockerfile .
         docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}"
@@ -378,10 +476,13 @@ jobs:
         name: "release-${{ github.sha }}" # Provide a release name based on commit SHA
 ```
 
-## Next Steps
+---
 
-1.  Commit and push these files (`Dockerfile`, `skaffold.yaml`, `clouddeploy.yaml`, `.github/workflows/deploy.yml`, `deploy.md`) to your `ragable-dev/ragable` GitHub repository.
-2.  Ensure the WIF setup (Step 4) is complete and the secrets are added to GitHub.
-3.  Apply the Cloud Deploy configuration to GCP using the command in Step 3.
-4.  Pushing to the `main` branch should now trigger the GitHub Action, build the image, and create a release in Cloud Deploy, which will then deploy to your Cloud Run service (`ragable-uscentral1-prod`).
-5.  Monitor the GitHub Actions run and the Cloud Deploy pipeline in the Google Cloud Console.
+## Step 7: Final Steps & Deployment
+
+1.  Commit and push all created/modified files (`Dockerfile`, `next.config.ts`, `skaffold.yaml`, `clouddeploy.yaml`, `.github/workflows/deploy.yml`, `deploy.md`) to your `ragable-dev/ragable` GitHub repository's `main` branch.
+2.  Ensure the WIF setup (Step 5c) is complete and all required secrets (WIF and Supabase public keys) are added to GitHub.
+3.  Ensure the runtime secrets (Step 5b) are created in Google Cloud Secret Manager.
+4.  Ensure the Cloud Deploy configuration has been applied to GCP using the command in Step 4.
+5.  Pushing to the `main` branch should now trigger the GitHub Action, build the image, create a release in Cloud Deploy, and deploy to your Cloud Run service (`ragable-uscentral1-prod`).
+6.  Monitor the GitHub Actions run and the Cloud Deploy pipeline in the Google Cloud Console.
