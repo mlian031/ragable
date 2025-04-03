@@ -15,8 +15,9 @@ This document outlines the steps to configure a CI/CD pipeline for deploying the
 *   Cloud Run Service Name: `ragable-uscentral1-prod` (This will be the target)
 *   GitHub Repository: `ragable-dev/ragable`
 *   Workload Identity Federation configured between GitHub and GCP.
+*   `next.config.ts` configured with `output: 'standalone'` (See Step 1b).
 
-## Step 1: Create Dockerfile
+## Step 1a: Create Dockerfile
 
 A multi-stage `Dockerfile` is used to build an optimized production image for the Next.js application using Node.js 22 LTS. It includes build arguments (`ARG`) and environment variables (`ENV`) specifically for the build stage to make variables like `GOOGLE_VERTEX_PROJECT` available during `pnpm build`.
 
@@ -90,6 +91,23 @@ ENV HOSTNAME "0.0.0.0"
 # server.js is created by next build output tracing
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 CMD ["node", "server.js"]
+```
+
+## Step 1b: Configure Next.js for Standalone Output (`next.config.ts`)
+
+Ensure your `next.config.ts` includes the `output: 'standalone'` option. This is necessary for the Docker build process to create the optimized `.next/standalone` directory used in the final image stage.
+
+```typescript
+// next.config.ts (Relevant part)
+import type { NextConfig } from "next";
+// ... other imports
+
+const nextConfig: NextConfig = {
+  output: 'standalone', // <--- Ensure this line is present
+  // ... other config options (compiler, images, webpack, etc.)
+};
+
+export default nextConfig;
 ```
 
 ## Step 2: Create Skaffold Configuration (`skaffold.yaml`)
