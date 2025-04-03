@@ -16,6 +16,11 @@ RUN pnpm install --frozen-lockfile --prod=false
 # 2. Rebuild the source code only when needed
 FROM node:22-alpine AS builder
 WORKDIR /app
+
+# Declare build arguments needed during the build process
+ARG GOOGLE_VERTEX_PROJECT
+ARG GOOGLE_VERTEX_LOCATION
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -23,6 +28,10 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
+
+# Set ENV variables within the builder stage so build process can access them
+ENV GOOGLE_VERTEX_PROJECT=${GOOGLE_VERTEX_PROJECT}
+ENV GOOGLE_VERTEX_LOCATION=${GOOGLE_VERTEX_LOCATION}
 
 # Use pnpm build
 RUN npm install -g pnpm

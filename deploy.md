@@ -18,7 +18,7 @@ This document outlines the steps to configure a CI/CD pipeline for deploying the
 
 ## Step 1: Create Dockerfile
 
-A multi-stage `Dockerfile` is used to build an optimized production image for the Next.js application using Node.js 22 LTS.
+A multi-stage `Dockerfile` is used to build an optimized production image for the Next.js application using Node.js 22 LTS. It includes build arguments (`ARG`) and environment variables (`ENV`) specifically for the build stage to make variables like `GOOGLE_VERTEX_PROJECT` available during `pnpm build`.
 
 ```dockerfile
 # Dockerfile
@@ -39,6 +39,11 @@ RUN pnpm install --frozen-lockfile --prod=false
 # 2. Rebuild the source code only when needed
 FROM node:22-alpine AS builder
 WORKDIR /app
+
+# Declare build arguments needed during the build process
+ARG GOOGLE_VERTEX_PROJECT
+ARG GOOGLE_VERTEX_LOCATION
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -46,6 +51,10 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
+
+# Set ENV variables within the builder stage so build process can access them
+ENV GOOGLE_VERTEX_PROJECT=${GOOGLE_VERTEX_PROJECT}
+ENV GOOGLE_VERTEX_LOCATION=${GOOGLE_VERTEX_LOCATION}
 
 # Use pnpm build
 RUN npm install -g pnpm
@@ -282,7 +291,7 @@ Add the outputs from the last command as secrets in your `ragable-dev/ragable` r
 
 ## Step 5: Create GitHub Actions Workflow (`.github/workflows/deploy.yml`)
 
-This workflow automates the build, push, and deploy process on pushes to the `main` branch.
+This workflow automates the build, push, and deploy process on pushes to the `main` branch. It passes necessary build arguments (`--build-arg`) during the `docker build` step.
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -330,7 +339,11 @@ jobs:
 
     - name: Build and Push Container Image
       run: |-
-        docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}" --file Dockerfile .
+        docker build \
+          --build-arg GOOGLE_VERTEX_PROJECT=${{ env.PROJECT_ID }} \
+          --build-arg GOOGLE_VERTEX_LOCATION=${{ env.REGION }} \
+          -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}" \
+          --file Dockerfile .
         docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}"
 
     - name: Create Cloud Deploy Release
