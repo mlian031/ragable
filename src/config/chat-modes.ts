@@ -1,4 +1,4 @@
-import { Globe, LucideIcon, Code2, FlaskConical, LineChart, CheckCheck, Quote } from 'lucide-react'; // Added Quote icon
+import { Globe, LucideIcon, Code2, FlaskConical, LineChart, Quote } from 'lucide-react'; // Added Quote icon
 import { ACADEMIC_WRITING_PROMPT } from '@/prompts/academic-writing-prompt'; // Import the new prompt
 
 export interface ChatMode {

@@ -342,7 +342,7 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
                      key={`${message.id}-tool-${toolCallId}-invalid`}
                      className="my-2 rounded bg-destructive/20 p-2 text-sm text-destructive-foreground"
                    >
-                     Error: Received invalid data structure for plot display (missing or empty 'data' array).
+                     Error: Received invalid data structure for plot display (missing or empty &apos;data&apos; array).
                    </div>
                  );
               }
