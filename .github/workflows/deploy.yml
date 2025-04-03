@@ -52,6 +52,10 @@ jobs:
           --file Dockerfile .
         docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}"
 
+    - name: Get short SHA
+      id: sha
+      run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
     - name: Create Cloud Deploy Release
       id: create_release
       uses: google-github-actions/create-cloud-deploy-release@v1
@@ -63,4 +67,4 @@ jobs:
         images: ${{ env.APP_NAME }}_image=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}
         # Optional: Add description
         # description: "Triggered by GitHub Actions commit ${{ github.sha }}"
-        name: "release-${{ github.sha }}" # Provide a release name based on commit SHA
+        name: "release-${{ steps.sha.outputs.short_sha }}" # Use output from previous step

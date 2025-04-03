@@ -405,7 +405,7 @@ Add the outputs from the last command as secrets in your `ragable-dev/ragable` r
 
 ## Step 6: Create GitHub Actions Workflow (`.github/workflows/deploy.yml`)
 
-This workflow automates the build, push, and deploy process on pushes to the `main` branch. It passes necessary build arguments (`--build-arg`) during the `docker build` step.
+This workflow automates the build, push, and deploy process on pushes to the `main` branch. It passes necessary build arguments (`--build-arg`) during the `docker build` step and generates a release name using the short commit SHA to avoid exceeding character limits.
 
 ```yaml
 # .github/workflows/deploy.yml
@@ -462,6 +462,10 @@ jobs:
           --file Dockerfile .
         docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}"
 
+    - name: Get short SHA
+      id: sha
+      run: echo "short_sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
     - name: Create Cloud Deploy Release
       id: create_release
       uses: google-github-actions/create-cloud-deploy-release@v1
@@ -473,7 +477,7 @@ jobs:
         images: ${{ env.APP_NAME }}_image=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/ragable-prod/${{ env.APP_NAME }}:${{ github.sha }}
         # Optional: Add description
         # description: "Triggered by GitHub Actions commit ${{ github.sha }}"
-        name: "release-${{ github.sha }}" # Provide a release name based on commit SHA
+        name: "release-${{ steps.sha.outputs.short_sha }}" # Use output from previous step
 ```
 
 ---
