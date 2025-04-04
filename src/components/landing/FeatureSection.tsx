@@ -90,7 +90,7 @@ export default function FeatureSection({
                 {/* Conditionally add the overlay image */}
                 {imageUrl === "https://storage.googleapis.com/ragable-static/grainient-3.png" && (
                   <Image
-                    src="/abstracts/database-graphic.png"
+                    src="https://storage.googleapis.com/ragable-static/database-graphic.png"
                     alt="Database overlay"
                     layout="fill" // Use layout="fill" for absolute positioning
                     objectFit="contain" // Or "cover" depending on desired effect
