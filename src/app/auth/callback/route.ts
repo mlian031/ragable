@@ -17,10 +17,10 @@ export async function GET(request: Request) {
 
     if (!error) {
       console.log('Code exchange successful. Redirecting to /chat'); // <-- Added logging
-      // Using full URL for potentially more robust redirection
-      const redirectUrl = new URL('/chat', requestUrl.origin);
-      console.log('Redirecting to:', redirectUrl.toString()); // <-- Added logging
-      return NextResponse.redirect(redirectUrl.toString())
+      // Construct the URL using the reliable public site URL
+      const redirectUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/chat`;
+      console.log('Redirecting to:', redirectUrl); // Log the correct URL
+      return NextResponse.redirect(redirectUrl);
     } else {
       // Log the specific error message from Supabase
       console.error('Supabase code exchange error message:', error.message); // <-- Added logging
@@ -31,8 +31,8 @@ export async function GET(request: Request) {
 
   // Return the user to an error page with instructions
   console.log('Redirecting to error page /auth/error'); // <-- Added logging
-   // Using full URL for potentially more robust redirection
-  const errorUrl = new URL('/auth/error', requestUrl.origin);
-  console.log('Redirecting to:', errorUrl.toString()); // <-- Added logging
-  return NextResponse.redirect(errorUrl.toString())
+   // Construct the URL using the reliable public site URL
+  const errorUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/error`;
+  console.log('Redirecting to:', errorUrl); // Log the correct URL
+  return NextResponse.redirect(errorUrl);
 }
