@@ -25,7 +25,7 @@ function FeatureCard({ icon, title, description }: FeatureCardProps) {
         <IconComponent className="w-6 h-6" /> {/* Render the dynamic Icon component */}
       </div>
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <p className="text-gray-600 dark:text-gray-300">{description}</p>
     </div>
   );
 }
@@ -52,15 +52,15 @@ export default function FeatureSection({
   className = "",
 }: FeatureSectionProps) {
   return (
-    <section className={`py-16 md:py-24 ${className}`}>
-      <div className="container mx-auto">
+    <section className={`py-16 px-12 md:py-24 ${className}`}>
+      <div className="container mx-auto px-4 sm:px-6 md:px-10 lg:px-20">
         <div className="flex flex-col md:flex-row gap-12 items-center">
           {/* Content */}
           <div className={`w-full md:w-1/2 ${imagePosition === "left" ? "md:order-2" : "md:order-1"}`}>
             <div className="max-w-lg">
               <h2 className="text-3xl font-bold mb-2">{title}</h2>
-              <h3 className="text-xl font-medium mb-4 text-gray-700">{subtitle}</h3>
-              <p className="text-gray-600 mb-8">{description}</p>
+              <h3 className="text-xl font-medium mb-4 text-gray-700 dark:text-gray-200">{subtitle}</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-8">{description}</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {features.map((feature) => (

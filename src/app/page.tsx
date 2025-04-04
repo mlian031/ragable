@@ -57,7 +57,7 @@ const featureSections: FeatureData[] = [ // Removed export keyword
    description: "Go beyond simple chat. Ragable offers specialized tools designed to accelerate your learning and research process, from complex visualizations to polished academic writing.",
    imageUrl: "https://storage.googleapis.com/ragable-static/grainient-2.png", // Placeholder
    imagePosition: "left",
-   className: "bg-gray-50",
+   className: "bg-gray-50 dark:bg-gray-900",
     features: [
        {
         icon: "FlaskConical",
@@ -142,10 +142,10 @@ export default async function LandingPage() {
 
   return (
     <>
-      <div className="px-6 sm:px-4">
+      <div className="px-6">
       <Header />
       </div>
-      <main className="px-6 sm:px-4">
+      <main className="px-6 sm:px-4 lg:px-12">
         <HeroSection />
         {featureSections.map((section) => (
           <FeatureSection

@@ -166,7 +166,7 @@ export default async function SettingsPage() {
                        background: 'url(https://storage.googleapis.com/ragable-static/grainient-2.png) no-repeat center center',
                      }}
                    >
-                    <Link href="/pricing">
+                    <Link href="/pricing" className='dark:text-gray-100 hover:dark:text-gray-300'>
                       Upgrade Plan <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -267,7 +267,7 @@ export default async function SettingsPage() {
        <Image
          src="https://storage.googleapis.com/ragable-static/grainient-3.png"
          alt="Abstract background"
-         className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+         className="absolute inset-0 h-full w-full object-cover"
           fill
           priority
         />

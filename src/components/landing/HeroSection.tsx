@@ -16,9 +16,9 @@ export default function HeroSection() {
             </span>{" "}
             of your learning
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 mb-8">
+          <p className="text-lg md:text-xl dark:text-gray-100 text-gray-600 mb-8">
             Let&apos;s take you from passive understanding to{" "}
-            <span className="bg-gradient-to-r from-red-700 to-purple-600 text-transparent bg-clip-text">
+            <span className="bg-gradient-to-r dark:from-teal-200 dark:to-purple-300 from-red-700 to-purple-600 text-transparent bg-clip-text">
               active mastery
             </span>
             .
@@ -32,21 +32,21 @@ export default function HeroSection() {
               style={{
                 background: "url('https://storage.googleapis.com/ragable-static/grainient-2.png')",
                 backgroundSize: "cover",
-                backgroundPosition: "top",
+                backgroundPosition: "bottom",
               }}
             >
-              <Link href="/chat" className="">
+              <Link href="/chat" className="dark:text-white">
                 Get started
               </Link>
             </Button>
           </div>
           {/* TODO: Update trusted by text later if needed */}
-          <p className="text-sm text-gray-500 mt-6">
+          <p className="text-sm text-gray-500 dark:text-white mt-6">
             Built for students, by students.
           </p>
 
           {/* University logos are already updated */}
-          <div className="flex flex-row justify-center items-center gap-8 mt-8">
+          <div className="flex flex-row justify-center items-center gap-8 mt-8 p-6 rounded-xl dark:bg-white dark:backdrop-blur-sm dark:shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all duration-300">
              <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
                <Image
                  src="https://storage.googleapis.com/ragable-static/uoftoronto.png"

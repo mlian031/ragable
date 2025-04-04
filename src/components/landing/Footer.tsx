@@ -20,7 +20,7 @@ function FooterColumn({ title, links }: FooterColumnProps) {
           <li key={link.text}>
             <Link
               href={link.href}
-              className="text-sm text-gray-600 hover:text-gray-900"
+              className="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-400 transition-colors duration-200"
               target={link.isExternal ? "_blank" : undefined}
               rel={link.isExternal ? "noopener noreferrer" : undefined}
             >
@@ -78,7 +78,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="bg-white py-12 border-t border-gray-100">
+    <footer className="bg-white dark:bg-neutral-900 py-12 border-t border-gray-100 dark:border-neutral-800">
       <div className="container mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {columns.map((column) => (
@@ -93,7 +93,7 @@ export default function Footer() {
           <Link href="/" className="font-bold text-xl mb-4 md:mb-0">
             Ragable
           </Link>
-          <p className="text-sm text-gray-500">&copy; 2025 Ragable</p>
+          <p className="text-sm text-gray-500 dark:text-gray-100">&copy; 2025 Ragable</p>
         </div>
       </div>
     </footer>

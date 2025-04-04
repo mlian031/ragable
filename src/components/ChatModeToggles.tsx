@@ -58,7 +58,7 @@ export function ChatModeToggles({
       </p>
       {/* Add Cmd+Enter note */}
       <p className="text-xs text-muted-foreground lowercase mt-1 w-full font-mono">
-        Press<span className='text-primary'>{' '}cmd + enter{' '}</span>to send a message and <span className='text-primary'>{' '}enter{' '}</span> to add a new line.
+        Press<span className='text-primary'>{' '}cmd/ctrl + Enter{' '}</span>to send a message and <span className='text-primary'>{' '}Enter{' '}</span> to add a new line.
       </p>
     </div>
   );

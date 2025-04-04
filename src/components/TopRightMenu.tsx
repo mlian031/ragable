@@ -7,6 +7,7 @@ import { LogIn, User as UserIcon } from "lucide-react";
 import { type User } from "@supabase/supabase-js"; // Import User type
 import { Button } from "./ui/button"; // Import Button for Sign In link
 import { SignOutButton } from "./SignOutButton"; // Import the SignOutButton
+import { SimpleThemeToggle } from "./simple-theme-toggle"; // Import SimpleThemeToggle
 
 // Define props for the component
 interface TopRightMenuProps {
@@ -43,6 +44,9 @@ export function TopRightMenu({ user }: TopRightMenuProps) {
               <span>Chat</span>
             </Button>
           </Link>
+        </div>
+        <div className="px-1"> {/* Wrap the toggle */}
+          <SimpleThemeToggle />
         </div>
         {user ? (
           <>

@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ThemeToggle } from "@/components/theme-toggle"; // Import ThemeToggle
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="py-4 border-b border-gray-100">
+    <header className="py-4 border-b">
       <div className="container mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-2">
-          <Link href="/" className="tracking-widest font-medium text-xl">
+          <Link href="/" className="tracking-widest font-medium text-xl"> {/* Added dark:text */}
             Ragable Inc.
           </Link>
         </div>
@@ -19,28 +20,29 @@ export default function Header() {
         <nav className="hidden md:flex items-center space-x-8">
           <Link
             href="/"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="text-sm font-medium" // Added dark:text/hover
           >
             Resources
           </Link>
           <Link
             href="/pricing"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="text-sm font-medium" // Added dark:text/hover
           >
             Pricing
           </Link>
           <Link
             href="/"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="text-sm font-medium" // Added dark:text/hover
           >
             Contact Sales
           </Link>
           <Link
             href="/signup"
-            className="text-sm font-medium px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
+            className="dark:bg-neutral-800 dark:border-2 text-white dark:text-white block text-sm font-medium px-4 py-2 bg-primary rounded-md hover:bg-primary/90"
           >
             Sign up for free
           </Link>
+          <ThemeToggle /> {/* Add ThemeToggle here */}
         </nav>
 
         {/* Mobile menu button */}
@@ -58,6 +60,7 @@ export default function Header() {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="" // Added dark:text for SVG stroke
           >
             {isMobileMenuOpen ? (
               <>
@@ -77,33 +80,36 @@ export default function Header() {
 
       {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden py-6 px-6 space-y-4 border-t border-gray-100 flex flex-col">
+        <div className="md:hidden py-6 px-6 space-y-4 flex flex-col">
           <Link
             href="/"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="text-sm font-medium"
           >
             Resources
           </Link>
           <Link
             href="/pricing"
-            className="text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="text-sm font-medium"
           >
             Pricing
           </Link>
           <Link
             href="/"
-            className="block text-sm font-medium text-gray-600 hover:text-gray-900"
+            className="block text-sm font-medium "
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Contact Sales
           </Link>
           <Link
             href="/signup"
-            className="block text-sm font-medium px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 w-full text-center"
+            className="dark:bg-neutral-800 dark:border-2 text-white dark:text-white block text-sm font-medium px-4 py-2 bg-primary rounded-md hover:bg-primary/90 w-full text-center"
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Start using Ragable free
           </Link>
+          <div className="pt-4"> {/* Add some spacing */}
+            <ThemeToggle /> {/* Add ThemeToggle here */}
+          </div>
         </div>
       )}
     </header>
