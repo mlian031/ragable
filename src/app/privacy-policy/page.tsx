@@ -1,6 +1,6 @@
-import React from 'react';
-import Header from '@/components/landing/Header';
-import Footer from '@/components/landing/Footer';
+import React from "react";
+import Header from "@/components/landing/Header";
+import Footer from "@/components/landing/Footer";
 
 export default function PrivacyPolicyPage() {
   return (
@@ -38,13 +38,13 @@ export default function PrivacyPolicyPage() {
           <h3>1. Introduction</h3>
 
           <p>
-            Welcome to Ragable Inc. ("Ragable," "we,"
-            "us," or "our"). We are committed to protecting
-            the privacy of our users ("User," "you,"
-            "your"). This Privacy Policy explains how we collect, use,
+            Welcome to Ragable Inc. (&quot;Ragable,&quot; &quot;we,&quot;
+              &quot;us,&quot; or &quot;our&quot;). We are committed to protecting
+            the privacy of our users (&quot;User,&quot; &quot;you,&quot;
+              &quot;your&quot;). This Privacy Policy explains how we collect, use,
             disclose, and safeguard your information when you access and use our
             website, applications, software, AI models, tools, APIs, and related
-            services (collectively, the "Service"). Our Service
+            services (collectively, the &quot;Service&quot;). Our Service
             provides an agentic co-pilot designed to help students take agency of
             their learning.
           </p>
@@ -81,8 +81,8 @@ export default function PrivacyPolicyPage() {
             <li>
               <strong>User Content:</strong> We collect the files, documents
               (e.g., PDFs, images), text, data, prompts, and other information
-              you upload, submit, or create within the Service ("User
-              Content"). This includes content imported from third-party
+              you upload, submit, or create within the Service (&quot;User
+              Content&quot;). This includes content imported from third-party
               services like Google Drive if you choose to connect them.
             </li>
             <li>
@@ -128,7 +128,7 @@ export default function PrivacyPolicyPage() {
               Course Spaces, we will access and process the specific files and
               folders you authorize, solely for the purpose of providing this
               integration feature within the Service. Our access is governed by
-              Google's API policies and the permissions you grant.
+              Google&apos;s API policies and the permissions you grant.
             </li>
           </ul>
 
@@ -150,7 +150,7 @@ export default function PrivacyPolicyPage() {
               understand user needs and preferences, troubleshoot issues, develop
               new features, personalize your experience, and improve the overall
               quality of the Service. User Content may be used to improve the
-              Service's performance <em>for you</em>, but generally will
+              Service&apos;s performance <em>for you</em>, but generally will
               not be used to train general AI models shared across users unless
               it is aggregated and anonymized or you provide explicit consent.
             </li>
@@ -204,7 +204,7 @@ export default function PrivacyPolicyPage() {
                   and User Content via the Gemini AI models for generating
                   responses, and to integrate web search results when requested.
                   Information shared with Google for AI processing is subject to
-                  Google's API data usage policies.
+                  Google&apos;s API data usage policies.
                 </li>
               </ul>
               These service providers are authorized to use your personal
@@ -307,7 +307,7 @@ export default function PrivacyPolicyPage() {
           <h3>8. Your Privacy Rights</h3>
 
           <p>
-            Depending on your location and applicable law (such as Canada's
+            Depending on your location and applicable law (such as Canada&apos;s
             PIPEDA), you may have certain rights regarding your personal
             information, including:
           </p>
@@ -339,7 +339,7 @@ export default function PrivacyPolicyPage() {
           </ul>
           <p>
             To exercise these rights, please contact us using the details
-            provided in the "Contact Information" section below. We
+            provided in the &quot;Contact Information&quot; section below. We
             will respond to your request in accordance with applicable law. We
             may need to verify your identity before processing your request.
           </p>
@@ -360,7 +360,7 @@ export default function PrivacyPolicyPage() {
             accordance with this Privacy Policy.
           </p>
 
-          <h3>10. Children's Privacy</h3>
+          <h3>10. Children&apos;s Privacy</h3>
 
           <p>
             Our Service is not directed to individuals under the age of 13. We do
@@ -387,7 +387,7 @@ export default function PrivacyPolicyPage() {
 
           <p>
             The Service may contain links to other websites or services not
-            operated or controlled by Ragable ("Third-Party Sites").
+            operated or controlled by Ragable (&quot;Third-Party Sites&quot;).
             The information that you share with Third-Party Sites will be governed
             by the specific privacy policies and terms of service of the
             Third-Party Sites and not by this Privacy Policy. Ragable is not
@@ -400,8 +400,8 @@ export default function PrivacyPolicyPage() {
             We may update this Privacy Policy from time to time to reflect
             changes in our practices, technology, legal requirements, or other
             factors. If we make material changes, we will notify you by posting
-            the updated policy on our website, updating the "Last
-            Updated" date, and/or providing other notice as required by
+            the updated policy on our website, updating the &quot;Last
+            Updated&quot; date, and/or providing other notice as required by
             applicable law (e.g., via email or in-app notification). Your
             continued use of the Service after any changes constitutes your
             acceptance of the revised Privacy Policy.

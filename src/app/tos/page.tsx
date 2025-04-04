@@ -19,20 +19,20 @@ export default function TermsOfServicePage() {
           <h3>1. Introduction and Acceptance of Terms</h3>
 
           <p>
-            Welcome to Ragable! These Terms of Service ("Terms,"
-            "TOS") govern your access to and use of the Ragable website,
+            Welcome to Ragable! These Terms of Service (&quot;Terms&quot;,
+              &quot;TOS&quot;) govern your access to and use of the Ragable website,
             applications, software, AI models, tools, APIs, and any related
-            services (collectively, the "Service") provided by Ragable
-            Inc. ("Ragable," "we," "us," or
-            "our"). Our Service offers an agentic co-pilot designed to
+            services (collectively, the &quot;Service&quot;) provided by Ragable
+            Inc. (&quot;Ragable,&quot; &quot;we,&quot; &quot;us,&quot; or
+              &quot;our&quot;). Our Service offers an agentic co-pilot designed to
             help students transition from passive understanding to active mastery
             in their learning.
           </p>
 
           <p>
             PLEASE READ THESE TERMS CAREFULLY. BY ACCESSING, REGISTERING FOR, OR
-            USING THE SERVICE IN ANY MANNER, YOU ("USER," "YOU,"
-            "YOUR") ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND
+            USING THE SERVICE IN ANY MANNER, YOU (&quot;USER,&quot; &quot;YOU,&quot;
+              &quot;YOUR&quot;) ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND
             AGREE TO BE BOUND BY THESE TERMS AND OUR PRIVACY POLICY ([Insert Link
             to Privacy Policy Here], incorporated herein by reference). IF YOU DO
             NOT AGREE TO THESE TERMS OR THE PRIVACY POLICY, YOU MAY NOT ACCESS OR
@@ -43,7 +43,7 @@ export default function TermsOfServicePage() {
             If you are accessing or using the Service on behalf of a company,
             institution, or other legal entity, you represent and warrant that
             you have the authority to bind that entity to these Terms, in which
-            case "you" and "your" will refer to that entity.
+            case &quot;you&quot; and &quot;your&quot; will refer to that entity.
           </p>
 
           <h3>2. Description of Service</h3>
@@ -55,7 +55,7 @@ export default function TermsOfServicePage() {
           <ul>
             <li>
               <strong>AI Assistance:</strong> Leveraging advanced language models
-              like Google's Gemini 2.5 Pro, augmented with
+              like Google&apos;s Gemini 2.5 Pro, augmented with
               Retrieval-Augmented Generation (RAG) technology and multimodal
               tools, to provide context-aware academic assistance. This includes
               an AI Verification Score feature to assess response confidence
@@ -71,7 +71,7 @@ export default function TermsOfServicePage() {
             <li>
               <strong>Course Management:</strong> Features allowing users to
               upload documents (PDFs, images, etc.), organize them into
-              course-specific spaces ("Course Spaces"), and integrate
+              course-specific spaces (&quot;Course Spaces&quot;), and integrate
               with Google Drive for streamlined content management.
             </li>
             <li>
@@ -122,7 +122,7 @@ export default function TermsOfServicePage() {
           <h3>4. User Content and License Grant</h3>
           <ul>
             <li>
-              <strong>Definition:</strong> "User Content" means any
+              <strong>Definition:</strong> &quot;User Content&quot; means any
               text, data, documents (PDFs, images, etc.), information, code, or
               other materials that you upload, submit, post, display, link to, or
               otherwise make available through the Service, including content
@@ -187,7 +187,7 @@ export default function TermsOfServicePage() {
             <li>
               Upload, post, or transmit any content that is illegal, harmful,
               threatening, abusive, harassing, defamatory, vulgar, obscene,
-              libelous, invasive of another's privacy, hateful, or racially,
+              libelous, invasive of another&apos;s privacy, hateful, or racially,
               ethnically, or otherwise objectionable;
             </li>
             <li>
@@ -249,8 +249,8 @@ export default function TermsOfServicePage() {
             underlying technology, software, AI models (as implemented and
             integrated by Ragable), interfaces, graphics, design, compilation,
             information, data, computer code (including source code and object
-            code), products, and all other elements of the Service ("Ragable
-            IP") are the property of Ragable Inc. or its licensors and are
+            code), products, and all other elements of the Service (&quot;Ragable
+            IP&quot;) are the property of Ragable Inc. or its licensors and are
             protected by intellectual property laws. You are granted a limited,
             non-exclusive, non-transferable, non-sublicensable, revocable
             license to access and use the Service solely for your personal,
@@ -290,7 +290,7 @@ export default function TermsOfServicePage() {
             </li>
             <li>
               <strong>Paid Subscriptions:</strong> Certain features or higher
-              usage limits may require payment ("Paid Subscriptions").
+              usage limits may require payment (&quot;Paid Subscriptions&quot;).
               If you purchase a Paid Subscription, you agree to pay the fees
               specified at the time of purchase. Fees are typically billed in
               advance on a recurring basis (e.g., monthly or annually) unless
@@ -319,8 +319,8 @@ export default function TermsOfServicePage() {
           <h3>9. Disclaimers of Warranties</h3>
 
           <p>
-            THE SERVICE IS PROVIDED ON AN "AS IS" AND "AS
-            AVAILABLE" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS
+            THE SERVICE IS PROVIDED ON AN &quot;AS IS&quot; AND &quot;AS
+            AVAILABLE&quot; BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS
             OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
             MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND
             NON-INFRINGEMENT.
@@ -338,8 +338,8 @@ export default function TermsOfServicePage() {
           <p>
             YOU ACKNOWLEDGE THAT THE SERVICE UTILIZES ARTIFICIAL INTELLIGENCE AND
             MACHINE LEARNING MODELS (INCLUDING GEMINI 2.5 PRO). AI OUTPUT MAY BE
-            INACCURATE, INCOMPLETE, OR CONTAIN ERRORS ("HALLUCINATIONS").
-            THE "AI VERIFICATION SCORE" IS AN INDICATIVE TOOL AND NOT A
+            INACCURATE, INCOMPLETE, OR CONTAIN ERRORS (&quot;HALLUCINATIONS&quot;).
+            THE &quot;AI VERIFICATION SCORE&quot; IS AN INDICATIVE TOOL AND NOT A
             GUARANTEE OF ACCURACY. YOU ARE SOLELY RESPONSIBLE FOR EVALUATING THE
             ACCURACY, COMPLETENESS, AND APPROPRIATENESS OF ANY INFORMATION OR
             CONTENT GENERATED BY THE SERVICE, AND FOR VERIFYING INFORMATION
@@ -367,7 +367,7 @@ export default function TermsOfServicePage() {
           </p>
 
           <p>
-            TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, RAGABLE'S
+            TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, RAGABLE&apos;S
             TOTAL CUMULATIVE LIABILITY TO YOU FOR ALL CLAIMS ARISING FROM OR
             RELATING TO THE SERVICE OR THESE TERMS, WHETHER IN CONTRACT, TORT, OR
             OTHERWISE, SHALL NOT EXCEED THE GREATER OF (I) THE TOTAL AMOUNT OF
@@ -391,10 +391,10 @@ export default function TermsOfServicePage() {
             respective officers, directors, employees, contractors, agents,
             licensors, suppliers, successors, and assigns from and against any
             claims, liabilities, damages, judgments, awards, losses, costs,
-            expenses, or fees (including reasonable attorneys' fees) arising
+            expenses, or fees (including reasonable attorneys&apos; fees) arising
             out of or relating to: (a) your violation of these Terms; (b) your
             use of the Service, including, but not limited to, your User Content;
-            (c) any use of the Service's content, services, and products
+            (c) any use of the Service&apos;s content, services, and products
             other than as expressly authorized in these Terms; or (d) your
             violation of any law or the rights of a third party (including
             intellectual property rights and privacy rights).
@@ -438,7 +438,7 @@ export default function TermsOfServicePage() {
           <p>
             Ragable reserves the right, at its sole discretion, to modify or
             replace these Terms at any time. If a revision is material, we will
-            make reasonable efforts to provide at least 30 days' notice
+            make reasonable efforts to provide at least 30 days&apos; notice
             prior to any new terms taking effect (e.g., via email, in-app
             notification, or by posting the revised Terms on our website). What
             constitutes a material change will be determined at our sole
@@ -461,12 +461,12 @@ export default function TermsOfServicePage() {
               claim, or controversy arising out of or relating to these Terms or
               the breach, termination, enforcement, interpretation, or validity
               thereof or the use of the Service (collectively,
-              "Disputes") will be settled by binding arbitration,
+                &quot;Disputes&quot;) will be settled by binding arbitration,
               except that each party retains the right: (i) to bring an
               individual action in small claims court and (ii) to seek injunctive
               or other equitable relief in a court of competent jurisdiction to
               prevent the actual or threatened infringement, misappropriation or
-              violation of a party's copyrights, trademarks, trade secrets,
+              violation of a party&apos;s copyrights, trademarks, trade secrets,
               patents or other intellectual property rights.
             </li>
             <li>
@@ -482,7 +482,7 @@ export default function TermsOfServicePage() {
               CAPACITY, AND NOT AS A PLAINTIFF OR CLASS MEMBER IN ANY PURPORTED
               CLASS OR REPRESENTATIVE PROCEEDING. Further, unless both you and
               Ragable agree otherwise, the arbitrator may not consolidate more
-              than one person's claims, and may not otherwise preside over
+              than one person&apos;s claims, and may not otherwise preside over
               any form of a representative or class proceeding.
             </li>
           </ul>
@@ -513,7 +513,7 @@ export default function TermsOfServicePage() {
             </li>
             <li>
               <strong>Assignment:</strong> You may not assign or transfer these
-              Terms, by operation of law or otherwise, without Ragable's
+              Terms, by operation of law or otherwise, without Ragable&apos;s
               prior written consent. Any attempt by you to assign or transfer
               these Terms, without such consent, will be null and void. Ragable
               may freely assign or transfer these Terms without restriction.
@@ -541,7 +541,7 @@ export default function TermsOfServicePage() {
             <br />
             Toronto, Ontario, Canada
             <br />
-            <a href="mailto:[email address removed]">
+            <a href="mailto:team@ragable.ca">
               team@ragable.ca
             </a>{' '}
             <br />
