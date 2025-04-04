@@ -7,7 +7,7 @@ export default function CareersPage() {
         <h1 className="text-4xl font-bold mb-8 font-serif">Careers</h1>
         <div className="text-left">
         <p className="text-lg mb-4">
-          We're looking for hungry and talented UI/UX designers, Marketers and Software Engineers.
+          We&apos;re looking for hungry and talented UI/UX designers, Marketers and Software Engineers.
         </p>
         <p className="text-lg">
           If interested, please email evidence of exceptional ability to{' '}
