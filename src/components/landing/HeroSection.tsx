@@ -46,7 +46,7 @@ export default function HeroSection() {
           </p>
 
           {/* University logos are already updated */}
-          <div className="flex flex-row justify-center items-center gap-8 mt-8 p-6 rounded-xl dark:bg-white dark:backdrop-blur-sm dark:shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all duration-300">
+          <div className="hidden sm:flex flex-row justify-center items-center gap-8 mt-8 p-6 rounded-xl dark:bg-white dark:backdrop-blur-sm dark:shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all duration-300">
              <div className="transition-all duration-300 filter grayscale hover:grayscale-0">
                <Image
                  src="https://storage.googleapis.com/ragable-static/uoftoronto.png"

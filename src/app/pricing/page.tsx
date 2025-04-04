@@ -169,9 +169,9 @@ export default function PricingPage() {
         </section>
 
         {/* Social Proof Logos */}
-        <section className="container mx-auto flex flex-col items-center text-center pb-16">
+        <section className="container mx-auto hidden sm:flex flex-col items-center text-center pb-16">
            <p className="text-sm text-muted-foreground mb-6">Trusted by students and researchers at:</p>
-           <div className="flex flex-wrap justify-center items-center gap-x-8 space-x-8 gap-y-4 md:gap-x-12">
+           <div className="flex flex-wrap justify-center items-center gap-x-8 space-x-8 gap-y-4 md:gap-x-12 rounded-xl dark:bg-white dark:backdrop-blur-sm dark:shadow-[0_0_15px_rgba(255,255,255,0.05)] transition-all duration-300 p-10">
              {universityLogos.map((logo) => (
                <Image
                  key={logo.src}
@@ -199,7 +199,7 @@ export default function PricingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section className="container mx-auto flex flex-col items-center py-16 md:pb-24 px-10">
+        <section className="container mx-auto flex flex-col items-center py-16 md:pb-24">
           {/* Billing Toggle */}
           <Tabs defaultValue="monthly" className="w-auto mb-10 p-4" onValueChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}>
             <TabsList className="grid w-full grid-cols-2 ">
@@ -209,7 +209,7 @@ export default function PricingPage() {
           </Tabs>
 
           {/* Pricing Cards Grid */}
-          <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-3 w-full max-w-6xl">
+          <div className="grid gap-8 md:grid-cols-3 lg:grid-cols-3 w-full max-w-6xl px-4 sm:px-8 md:px-10 ">
             {currentTiers.map((tier) => (
               <Card key={tier.name} className={`flex flex-col rounded-lg border p-6 ${tier.popular ? 'border-primary' : ''}`}>
                 <CardHeader className="p-0 mb-4">
