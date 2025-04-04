@@ -38,18 +38,18 @@ export default function Footer() {
     {
       title: "Resources",
       links: [
-        { text: "User Guide", href: "/guide" },
-        { text: "Changelog", href: "/changelog" },
-        { text: "FAQs", href: "/faqs" },
-        { text: "Discord Community", href: "", isExternal: true },
+        { text: "User Guide", href: "/" },
+        { text: "Changelog", href: "/" },
+        { text: "FAQs", href: "/faq" },
+        { text: "Discord Community", href: "https://discord.gg/bzTEStMhER", isExternal: true },
       ],
     },
     {
       title: "Company",
       links: [
-        { text: "Careers", href: "", isExternal: true },
-        { text: "Support", href: "/" },
-        { text: "Contact", href: "", isExternal: true },
+        { text: "Careers", href: "/careers", isExternal: true },
+        { text: "Support", href: "mailto:support@ragable.ca", isExternal: true },
+        { text: "Contact", href: "mailto:team@ragable.ca", isExternal: true },
       ],
     },
     {
