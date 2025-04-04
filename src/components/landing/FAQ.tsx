@@ -34,7 +34,7 @@ function FaqItem({ question, answer }: FaqItemProps) {
         </svg>
       </button>
       <div
-        className={`mt-2 text-gray-600 transition-all duration-300 overflow-hidden ${
+        className={`mt-2 text-gray-600 dark:text-gray-200 transition-all duration-300 overflow-hidden ${
           isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         }`}
       >
@@ -82,7 +82,7 @@ export default function FaqSection() {
           ))}
         </div>
         <div className="mt-8 text-center">
-          <Link href="/faqs" className="text-primary font-medium hover:underline">
+          <Link href="/faq" className="text-primary font-medium hover:underline">
             More FAQs
           </Link>
         </div>
