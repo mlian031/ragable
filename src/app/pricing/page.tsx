@@ -153,7 +153,7 @@ export default function PricingPage() {
   const currentTiers = billingCycle === 'monthly' ? monthlyTiers : yearlyTiers;
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="px-12 flex min-h-screen flex-col">
       <Header />
       <main className="flex-1">
         {/* Hero Section */}
@@ -187,7 +187,7 @@ export default function PricingPage() {
         </section>
 
         {/* Upgrade Notice Banner */}
-        <section className="container mx-auto flex justify-center pb-8"> {/* Added padding-bottom */}
+        <section className="container mx-auto flex justify-center"> {/* Added padding-bottom */}
           <Alert className="max-w-3xl"> {/* Constrain width */}
             <Terminal className="h-4 w-4" /> {/* Icon */}
             <AlertTitle>Heads up!</AlertTitle>
@@ -199,7 +199,7 @@ export default function PricingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section className="container mx-auto flex flex-col items-center py-16 md:pb-24">
+        <section className="container mx-auto flex flex-col items-center py-16 md:pb-24 px-10">
           {/* Billing Toggle */}
           <Tabs defaultValue="monthly" className="w-auto mb-10 p-4" onValueChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}>
             <TabsList className="grid w-full grid-cols-2 ">

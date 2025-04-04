@@ -27,7 +27,7 @@ export default function CTASection() {
         {/* Ensured text color and margin match */}
         <p className="text-lg text-white mb-10">Take agency over your learning and get started right now. No card required.</p>
         <Button variant="default"
-         className="text-xl font-medium p-6"
+         className="text-xl font-medium p-6 dark:border-2"
          style={{
            background: "url('https://storage.googleapis.com/ragable-static/grainient-2.png')",
            backgroundSize: "cover",
@@ -37,7 +37,7 @@ export default function CTASection() {
         <Link
           href="/login"
           // Ensured text color and font weight match
-          className="text-lg font-medium hover:opacity-80 inline-flex items-center gap-2"
+          className="dark:text-white text-lg font-medium hover:opacity-80 inline-flex items-center gap-2"
         >
           Get Ragable free <span>→</span>
         </Link>

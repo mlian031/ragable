@@ -81,7 +81,7 @@ export default async function ProfilePage() {
        <Image
          src="https://storage.googleapis.com/ragable-static/grainient-2.png"
          alt="Abstract background"
-         className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+         className="absolute inset-0 h-full w-full object-cover"
           fill
           priority
         />
