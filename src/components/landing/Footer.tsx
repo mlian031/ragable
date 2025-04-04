@@ -56,7 +56,7 @@ export default function Footer() {
       title: "Product",
       links: [
         { text: "Web App", href: "/" },
-        { text: "Open Source", href: "/" },
+        { text: "Open Source", href: "https://github.com/ragable-dev" },
       ],
     },
     {
@@ -72,7 +72,7 @@ export default function Footer() {
         { text: "X (Twitter)", href: "", isExternal: true },
         { text: "Instagram", href: "", isExternal: true },
         { text: "TikTok", href: "", isExternal: true },
-        { text: "LinkedIn", href: "", isExternal: true },
+        { text: "LinkedIn", href: "https://www.linkedin.com/company/ragable", isExternal: true },
       ],
     },
   ];
