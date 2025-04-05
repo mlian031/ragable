@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import Cite from 'citation-js';
 
 /**
  * Combines Tailwind CSS classes with clsx for conditional class names.
@@ -64,6 +65,8 @@ export interface Source {
   title?: string;
   /** A relevant snippet from the source, if available. */
   snippet?: string;
+  /** Optional list of authors for the source. */
+  authors?: string[];
   /** Allows for other properties that might exist on the original source object. */
   [key: string]: unknown; // Use unknown instead of any
 }
@@ -95,6 +98,15 @@ type CitationSourceInput = {
  * @returns {string} The formatted citation string.
  */
 type CitationFormatter = (source: CitationSourceInput) => string;
+
+/**
+ * A map of citation style names to their corresponding CSL style names for citation-js.
+ */
+const styleMap: Record<string, string> = {
+  apa: 'apa',
+  mla: 'modern-language-association',
+  chicago: 'chicago-author-date',
+};
 
 /**
  * A map of citation style names to their corresponding formatting functions.
@@ -133,8 +145,20 @@ export function formatCitation(
   source: CitationSourceInput,
   style: string,
 ): string {
-  const formatter = citationFormatters[style.toLowerCase()] || citationFormatters.mla;
-  return formatter(source);
+  try {
+    const cslData = {
+      title: source.title || source.segment?.text || 'Untitled Source',
+      URL: source.url || source.uri || source.searchEntryPoint?.uri || '#',
+      accessed: { raw: new Date().toISOString() },
+    };
+    const cite = new Cite(cslData);
+    const template = styleMap[style.toLowerCase()] || 'modern-language-association';
+    return cite.format('bibliography', { format: 'text', template });
+  } catch (error) {
+    console.warn('citation-js formatting failed, falling back:', error);
+    const fallbackFormatter = citationFormatters[style.toLowerCase()] || citationFormatters.mla;
+    return fallbackFormatter(source);
+  }
 }
 
 // --- URL Resolution ---

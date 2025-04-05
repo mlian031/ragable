@@ -17,28 +17,77 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     label: 'Web Search Enabled',
     commonLabel: 'Web Search',
     icon: Globe,
-    systemPrompt: `You MUST use the search tool to answer this query. Do not rely on your existing knowledge. Provide comprehensive results based *only* on the search information provided.`,
+    systemPrompt: `
+# Web Search Mode Instructions
+1. **You MUST use the search tool to answer this query.**
+2. Do **NOT** rely solely on your existing knowledge.
+3. Base your answer **only** on the search results provided.
+4. Run the search tool **before** composing your response.
+5. Place citations **immediately after** relevant statements.
+6. If the search fails, politely inform the user and suggest rephrasing.
+
+# Prohibited
+- Do NOT fabricate information beyond search results.
+- Do NOT skip the search tool.
+- Do NOT place all citations only at the end.
+`,
   },
   CODE_GENERATION: {
     id: 'CODE_GENERATION',
     label: 'Code Generation Enabled',
     commonLabel: 'Code Generation',
     icon: Code2,
-    systemPrompt: `The user REQUIRES you to use the displayCode tool for a technical example of what they were talking about. Prioritize generating clear, functional code snippets using the displayCode tool.`,
+    systemPrompt: `
+# Code Generation Mode Instructions
+1. **You MUST use the displayCode tool** for all code examples.
+2. Do **NOT** write code directly in your response text.
+3. Run the displayCode tool **before** composing your explanation.
+4. Prioritize generating clear, functional code snippets.
+5. Explain the code **after** the tool output if needed.
+
+# Prohibited
+- Do NOT include raw code blocks outside the tool.
+- Do NOT generate explanations before running the tool.
+- Do NOT fabricate code snippets.
+`,
   },
   CHEM_VISUALIZER: {
     id: 'CHEM_VISUALIZER',
     label: 'Chemistry Visualizer Enabled',
     commonLabel: 'Chemistry Visualizer',
     icon: FlaskConical,
-    systemPrompt: `When discussing specific chemical compounds or structures, first determine the corresponding SMILES string if it's not already provided. Then, you MUST use the displayMolecule tool with the SMILES string to provide a visual representation.`,
+    systemPrompt: `
+# Chemistry Visualizer Mode Instructions
+1. When discussing chemical compounds, **first determine the SMILES string** if not provided.
+2. **You MUST use the displayMolecule tool** with the SMILES string to generate a visualization.
+3. Run the tool **before** composing your explanation.
+4. Briefly describe the molecule after visualization.
+
+# Prohibited
+- Do NOT fabricate chemical structures.
+- Do NOT skip the molecule visualization step.
+- Do NOT provide speculative descriptions without visualization.
+`,
   },
   PLOT_FUNCTION: {
     id: 'PLOT_FUNCTION',
     label: 'Plotting Enabled',
     commonLabel: 'Plotting',
     icon: LineChart,
-    systemPrompt: `When the user discusses mathematical functions (e.g., mentions 'y = x^2', 'the sine wave', 'f(x) = 1/x') or explicitly asks to visualize mathematical data, proactively identify the relevant function expression(s). You MUST then use the displayPlot tool to visualize the identified function(s). Provide any relevant options (like title, axis labels, or domains if specified or easily inferred) to the tool.`,
+    systemPrompt: `
+# Plotting Mode Instructions
+1. When the user mentions mathematical functions or requests visualization:
+   - Identify the relevant function(s).
+   - **You MUST use the displayPlot tool** to generate plots.
+2. Provide relevant options (title, axis labels, domain) if specified or easily inferred.
+3. Run the tool **before** composing your explanation.
+4. Describe the plot and insights after visualization.
+
+# Prohibited
+- Do NOT fabricate plots.
+- Do NOT skip the plotting step.
+- Do NOT provide explanations before running the tool.
+`,
   },
   // DOUBLE_CHECK: {
   //   id: 'DOUBLE_CHECK',

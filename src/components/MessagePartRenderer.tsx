@@ -3,15 +3,8 @@ import { Message } from '@ai-sdk/react';
 import dynamic from 'next/dynamic'; // Import dynamic
 
 import { Badge } from '@/components/ui/badge';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { CodeBlock } from '@/components/code-block';
 import { MemoizedMarkdown } from '@/components/memoized-markdown';
-import { SearchResult, type Source as AppSource } from '@/components/SearchResult';
 // Remove direct import of MoleculeDisplay
 // import MoleculeDisplay from '@/components/MoleculeDisplay';
 import { type DisplayMoleculeArgs } from '@/lib/tools/displayMoleculeTool'; // Import args type
@@ -69,9 +62,12 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
     return null; // Nothing to render if no parts and no string content
   }
 
+  const sourceParts = message.parts.filter((p) => p.type === 'source') as any[]; // Cast to any[] for now
+  const otherParts = message.parts.filter((p) => p.type !== 'source');
+
   return (
     <div className="prose prose-sm dark:prose-invert max-w-none space-y-2">
-      {message.parts.map((part, index: number) => {
+      {otherParts.map((part, index: number) => {
         switch (part.type) {
           case 'text':
             return (
@@ -132,7 +128,7 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
               const searchContext =
                 searchResult?.context || 'No search context available.';
               const searchSourcesRaw = searchResult?.sources || [];
-              const adaptedSources: AppSource[] = searchSourcesRaw.map(
+              const adaptedSources = searchSourcesRaw.map(
                 (sdkSource: SdkSource, idx: number) => ({
                   id: sdkSource.url || `tool-source-${toolCallId}-${idx}`,
                   title: sdkSource.title || 'Untitled Source',
@@ -140,26 +136,21 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
                   snippet: sdkSource.snippet || undefined,
                 }),
               );
+              const SourcesDisplay = require('@/components/SourcesDisplay').default;
+              const adaptedSourceParts = adaptedSources.map((s) => ({
+                type: 'source',
+                source: {
+                  id: s.id,
+                  url: s.url,
+                  title: s.title,
+                  snippet: s.snippet,
+                },
+              }));
+
               return (
-                <Accordion
-                  key={`${message.id}-tool-${toolCallId}`}
-                  type="single"
-                  collapsible
-                  className="my-2 w-full rounded-md bg-muted/30"
-                >
-                  <AccordionItem value="sources" className="border-none">
-                    <AccordionTrigger className="py-3 px-4 text-sm text-muted-foreground hover:no-underline">
-                      Show Search Results ({adaptedSources.length} sources)
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pt-0 pb-4">
-                      <SearchResult
-                        answer={searchContext}
-                        sources={adaptedSources}
-                        className="pt-0"
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
+                <div key={`${message.id}-tool-${toolCallId}`} className="my-4">
+                  <SourcesDisplay sources={adaptedSourceParts} />
+                </div>
               );
             }
 
@@ -499,6 +490,21 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
             // );
         }
       })}
+
+      {sourceParts.length > 0 && (
+        <div key={`${message.id}-sources`} className="my-4">
+          {/* Import the component dynamically to avoid SSR issues if needed */}
+          {/*
+          const DynamicSourcesDisplay = dynamic(() => import('@/components/SourcesDisplay'), { ssr: false });
+          <DynamicSourcesDisplay sources={sourceParts} />
+          */}
+          {/* For now, static import */}
+          {(() => {
+            const SourcesDisplay = require('@/components/SourcesDisplay').default;
+            return <SourcesDisplay sources={sourceParts} />;
+          })()}
+        </div>
+      )}
     </div>
   );
 };

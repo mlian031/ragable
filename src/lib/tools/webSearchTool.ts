@@ -3,8 +3,51 @@ import { z } from 'zod';
 import { geminiFlashModel } from '@/lib/vertex'; // Grounded model for search
 import { resolveSourceUrls, type Source } from '@/lib/utils'; // URL resolver and Source type
 
+// --- Zod Schemas for Web Search Tool ---
+
+/**
+ * Schema for a single source object, including optional authors.
+ */
+const SourceSchema = z.object({
+  url: z.string().url(),
+  title: z.string().optional(),
+  snippet: z.string().optional(),
+  authors: z.array(z.string()).optional(),
+});
+
+/**
+ * Schema for a successful web search result.
+ */
+const WebSearchResultSuccessSchema = z.object({
+  status: z.literal('success'),
+  summary: z.string(),
+  context: z.string(),
+  sources: z.array(SourceSchema),
+});
+
+/**
+ * Schema for an error web search result.
+ */
+const WebSearchResultErrorSchema = z.object({
+  status: z.literal('error'),
+  summary: z.string(),
+  context: z.string(),
+  sources: z.array(z.any()), // empty array
+});
+
+/**
+ * Union schema for any web search result.
+ */
+const WebSearchResultSchema = z.union([
+  WebSearchResultSuccessSchema,
+  WebSearchResultErrorSchema,
+]);
+
 /**
  * Defines the structured result returned by the webSearch tool upon success.
+ * 
+ * The `sources` array contains resolved source objects, which may optionally include:
+ * - `authors?: string[]` — list of author names if available.
  */
 export type WebSearchResultSuccess = {
   status: 'success';
@@ -59,8 +102,9 @@ and a list of relevant sources.`,
       });
 
       const context = retrievalResult.text;
-      // Cast sources to our Source type, assuming the structure matches (url, title, etc.)
+      // Cast sources to our Source type, assuming the structure matches (url, title, authors, etc.)
       // Provide an empty array fallback if sources are null/undefined.
+      // If author information is available in the retrieval result, it can be included in each source's `authors` array.
       const initialSources: Source[] =
         (retrievalResult.sources as Source[]) ?? [];
 

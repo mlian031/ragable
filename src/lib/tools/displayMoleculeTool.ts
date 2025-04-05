@@ -64,7 +64,7 @@ export const displayMoleculeTool = tool({
     // The execute function confirms receipt of the arguments.
     return {
       status: 'success',
-      summary: `Molecule data received for SMILES: ${args.smiles}. Rendering handled by frontend.`,
+      summary: `Molecule data received for SMILES: ${args.smiles}. Rendering handled by frontend. DO NOT CALL THIS TOOL AGAIN.`,
       ...args, // Include all original arguments
     };
     // Note: Error handling for invalid SMILES or RDKit issues should occur
