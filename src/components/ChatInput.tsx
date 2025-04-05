@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { SendHorizontal, Mic, Paperclip, Maximize2, X } from "lucide-react"; // Added X
+import { SendHorizontal, Mic, Paperclip, Maximize2 } from "lucide-react"; // Added X
 import { useToast } from "@/components/ui/use-toast";
 import { getAllChatModes } from "@/config/chat-modes"; // Import mode config utils
 // Removed useFileHandling import
@@ -14,11 +14,8 @@ import { ChatModeToggles } from "./ChatModeToggles"; // Import new component
 import { FullscreenInputModal } from "./FullscreenInputModal"; // Import new component
 import { Badge } from "./ui/badge";
 
-// Define LocalAttachmentInfo type - this will be used by the parent as well
-type LocalAttachmentInfo = {
-  name: string;
-  mimeType: string;
-};
+// Removed LocalAttachmentInfo type definition
+
 
 interface ChatInputProps {
   input: string;
@@ -86,10 +83,19 @@ export function ChatInput({
   // Constants for validation (replace with values from old hook or config)
   const maxFiles = 5; // Example limit
   const maxTotalSizeMB = 50; // Example limit
-  const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"]; // Example types
+  // Wrap allowedMimeTypes in useMemo
+  const allowedMimeTypes = useMemo(() => [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "application/pdf"
+  ], []); // Empty dependency array means it's created only once
 
-  // Convert FileList to Array for easier handling in UI/validation
-  const selectedFilesArray = selectedFileList ? Array.from(selectedFileList) : [];
+  // Convert FileList to Array for easier handling in UI/validation and memoize it
+  const selectedFilesArray = useMemo(() => {
+    return selectedFileList ? Array.from(selectedFileList) : [];
+  }, [selectedFileList]); // Depend on selectedFileList
 
   // Calculate total size
   const totalSelectedSizeMB = selectedFilesArray.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024;
@@ -128,6 +134,9 @@ export function ChatInput({
       currentTotalSize += fileSize;
       return true;
     });
+
+
+    console.log(`Validation Error: ${validationError}`)
 
     // Update state using DataTransfer to create a new FileList
     const dataTransfer = new DataTransfer();
