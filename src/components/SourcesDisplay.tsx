@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { useToast } from '@/components/ui/use-toast';
 import { formatCitation } from '@/lib/utils';
+import { Label } from '@/components/ui/label';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 /**
  * Type for AI SDK 4.2 SourcePart.
@@ -20,7 +22,8 @@ export interface SourcePart {
     title?: string;
     snippet?: string;
     publishedDate?: string;
-    [key: string]: any; // Allow extra fields
+    authors?: string[]; // Explicitly typed to fix TS errors
+    [key: string]: unknown; // Allow extra fields, fix lint error
   };
 }
 
@@ -77,13 +80,33 @@ export const SourcesDisplay: React.FC<SourcesDisplayProps> = ({ sources }) => {
           </Badge>
         </div>
 
+        {/* Citation style selector */}
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-border/20">
+          <Label htmlFor="citation-style" className="text-xs text-muted-foreground">
+            Citation Style:
+          </Label>
+          <Select
+            value={citationStyle}
+            onValueChange={(value) => setCitationStyle(value as 'mla' | 'apa' | 'chicago')}
+          >
+            <SelectTrigger className="w-[120px] text-xs">
+              <SelectValue placeholder="Select style" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mla">MLA</SelectItem>
+              <SelectItem value="apa">APA</SelectItem>
+              <SelectItem value="chicago">Chicago</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Query badges row - placeholder, since query info may not be available */}
         <div className="flex overflow-x-auto gap-1.5 px-4 py-2 no-scrollbar">
           {/* Example static badges, replace with dynamic if query info is available */}
           {/* <Badge variant="secondary" className="px-2.5 py-1 text-xs rounded-full bg-muted flex-shrink-0">Query 1</Badge> */}
         </div>
 
-        <div className="flex overflow-x-auto gap-3 px-4 pb-4 no-scrollbar snap-x snap-mandatory">
+        <div className="flex overflow-x-auto px-6 gap-3 pb-4 no-scrollbar snap-x snap-mandatory">
           {sources.map((part, idx) => {
             const src = part.source;
             const sourceId = src.id || src.url || `source-${idx}`;

@@ -11,6 +11,7 @@ import { type DisplayMoleculeArgs } from '@/lib/tools/displayMoleculeTool'; // I
 import { type DisplayPlotArgs } from '@/lib/tools/displayPlotTool'; // Import plot args type
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
 import { FileText } from 'lucide-react'; // Import FileText
+import SourcesDisplay from '@/components/SourcesDisplay'; // Static import to replace require()
 
 // Import PlotDisplay
 import { PlotDisplay } from '@/components/PlotDisplay';
@@ -24,6 +25,16 @@ const DynamicMoleculeDisplay = dynamic(
   }
 );
 
+
+interface SourcePart {
+  type: 'source';
+  source: {
+    id: string;
+    url: string;
+    title: string;
+    snippet?: string;
+  };
+}
 
 // Re-define necessary types locally or import if shared
 type SdkSource = {
@@ -62,7 +73,7 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
     return null; // Nothing to render if no parts and no string content
   }
 
-  const sourceParts = message.parts.filter((p) => p.type === 'source') as any[]; // Cast to any[] for now
+  const sourceParts = message.parts.filter((p) => p.type === 'source') as SourcePart[];
   const otherParts = message.parts.filter((p) => p.type !== 'source');
 
   return (
@@ -125,8 +136,6 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
                 );
               }
 
-              const searchContext =
-                searchResult?.context || 'No search context available.';
               const searchSourcesRaw = searchResult?.sources || [];
               const adaptedSources = searchSourcesRaw.map(
                 (sdkSource: SdkSource, idx: number) => ({
@@ -136,7 +145,6 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
                   snippet: sdkSource.snippet || undefined,
                 }),
               );
-              const SourcesDisplay = require('@/components/SourcesDisplay').default;
               const adaptedSourceParts = adaptedSources.map((s) => ({
                 type: 'source',
                 source: {
@@ -145,7 +153,7 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
                   title: s.title,
                   snippet: s.snippet,
                 },
-              }));
+              } as const));
 
               return (
                 <div key={`${message.id}-tool-${toolCallId}`} className="my-4">
@@ -493,16 +501,7 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
 
       {sourceParts.length > 0 && (
         <div key={`${message.id}-sources`} className="my-4">
-          {/* Import the component dynamically to avoid SSR issues if needed */}
-          {/*
-          const DynamicSourcesDisplay = dynamic(() => import('@/components/SourcesDisplay'), { ssr: false });
-          <DynamicSourcesDisplay sources={sourceParts} />
-          */}
-          {/* For now, static import */}
-          {(() => {
-            const SourcesDisplay = require('@/components/SourcesDisplay').default;
-            return <SourcesDisplay sources={sourceParts} />;
-          })()}
+          <SourcesDisplay sources={sourceParts} />
         </div>
       )}
     </div>

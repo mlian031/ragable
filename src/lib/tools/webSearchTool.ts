@@ -3,46 +3,6 @@ import { z } from 'zod';
 import { geminiFlashModel } from '@/lib/vertex'; // Grounded model for search
 import { resolveSourceUrls, type Source } from '@/lib/utils'; // URL resolver and Source type
 
-// --- Zod Schemas for Web Search Tool ---
-
-/**
- * Schema for a single source object, including optional authors.
- */
-const SourceSchema = z.object({
-  url: z.string().url(),
-  title: z.string().optional(),
-  snippet: z.string().optional(),
-  authors: z.array(z.string()).optional(),
-});
-
-/**
- * Schema for a successful web search result.
- */
-const WebSearchResultSuccessSchema = z.object({
-  status: z.literal('success'),
-  summary: z.string(),
-  context: z.string(),
-  sources: z.array(SourceSchema),
-});
-
-/**
- * Schema for an error web search result.
- */
-const WebSearchResultErrorSchema = z.object({
-  status: z.literal('error'),
-  summary: z.string(),
-  context: z.string(),
-  sources: z.array(z.any()), // empty array
-});
-
-/**
- * Union schema for any web search result.
- */
-const WebSearchResultSchema = z.union([
-  WebSearchResultSuccessSchema,
-  WebSearchResultErrorSchema,
-]);
-
 /**
  * Defines the structured result returned by the webSearch tool upon success.
  * 
