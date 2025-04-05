@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { SendHorizontal, Mic, Paperclip, Maximize2 } from "lucide-react";
+import { SendHorizontal, Mic, Paperclip, Maximize2, X } from "lucide-react"; // Added X
 import { useToast } from "@/components/ui/use-toast";
 import { getAllChatModes } from "@/config/chat-modes"; // Import mode config utils
-import { useFileHandling, readFileAsDataURL } from "@/hooks/useFileHandling"; // Import the hook and helper
+// Removed useFileHandling import
 import { FileAttachmentDisplay } from "./FileAttachmentDisplay"; // Import new component
 import { ChatModeBadges } from "./ChatModeBadges"; // Import new component
 import { ChatModeToggles } from "./ChatModeToggles"; // Import new component
@@ -29,17 +29,18 @@ interface ChatInputProps {
   ) => void;
   handleSubmit: (
     e: React.FormEvent<HTMLFormElement>,
-    // Pass generic data object, expecting activeModes and potentially files
+    // Align with useChat's experimental_attachments option
     options?: {
       data?: {
         activeModes?: string[];
-        files?: Array<{ name: string; mimeType: string; data: string }>;
       };
-    } // Removed localAttachments from options type
+      experimental_attachments?: FileList; // Expect FileList here
+    }
   ) => void;
   isLoading: boolean;
   placeholder?: string;
-  onBeforeSubmit?: (attachments: LocalAttachmentInfo[]) => void; // Add optional callback
+  // Removed onBeforeSubmit prop
+  // onBeforeSubmit?: (attachments: LocalAttachmentInfo[]) => void;
   // New props for dynamic modes
   activeModes: Set<string>;
   toggleChatMode: (modeId: string) => void;
@@ -65,7 +66,8 @@ export function ChatInput({
   toggleChatMode,
   // Removed unused setMessages from destructuring
   // setMessages,
-  onBeforeSubmit, // Destructure the new prop
+  // Removed onBeforeSubmit from destructuring
+  // onBeforeSubmit,
   stop, // Destructure stop
   status, // Destructure status
   // Removed unused message count props from destructuring
@@ -79,18 +81,83 @@ export function ChatInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false); // State for fullscreen modal
+  const [selectedFileList, setSelectedFileList] = useState<FileList | undefined>(undefined); // State for FileList
 
-  // Use the file handling hook
-  const {
-    selectedFiles,
-    setSelectedFiles,
-    handleFileSelection,
-    handleRemoveFile,
-    totalSelectedSizeMB,
-    maxFiles,
-    maxTotalSizeMB,
-    allowedMimeTypes,
-  } = useFileHandling();
+  // Constants for validation (replace with values from old hook or config)
+  const maxFiles = 5; // Example limit
+  const maxTotalSizeMB = 50; // Example limit
+  const allowedMimeTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "application/pdf"]; // Example types
+
+  // Convert FileList to Array for easier handling in UI/validation
+  const selectedFilesArray = selectedFileList ? Array.from(selectedFileList) : [];
+
+  // Calculate total size
+  const totalSelectedSizeMB = selectedFilesArray.reduce((sum, file) => sum + file.size, 0) / 1024 / 1024;
+
+  // Handler for file input change
+  const handleFileChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const currentFiles = selectedFileList ? Array.from(selectedFileList) : [];
+    const newFiles = Array.from(files);
+    let combinedFiles = [...currentFiles, ...newFiles];
+    let validationError = false;
+
+    // Validate total count
+    if (combinedFiles.length > maxFiles) {
+      toast({ title: "File Limit Reached", description: `You can only attach up to ${maxFiles} files.`, variant: "destructive" });
+      combinedFiles = combinedFiles.slice(0, maxFiles); // Keep only allowed number
+      validationError = true;
+    }
+
+    // Validate types and total size
+    let currentTotalSize = 0;
+    const validatedFiles = combinedFiles.filter(file => {
+      if (!allowedMimeTypes.includes(file.type)) {
+        toast({ title: "Unsupported File Type", description: `File type (${file.type}) for "${file.name}" is not allowed.`, variant: "destructive" });
+        validationError = true;
+        return false;
+      }
+      const fileSize = file.size;
+      if (currentTotalSize + fileSize > maxTotalSizeMB * 1024 * 1024) {
+        toast({ title: "Total Size Limit Exceeded", description: `Adding "${file.name}" would exceed the total size limit of ${maxTotalSizeMB}MB.`, variant: "destructive" });
+        validationError = true;
+        return false;
+      }
+      currentTotalSize += fileSize;
+      return true;
+    });
+
+    // Update state using DataTransfer to create a new FileList
+    const dataTransfer = new DataTransfer();
+    validatedFiles.forEach(file => dataTransfer.items.add(file));
+    setSelectedFileList(dataTransfer.files.length > 0 ? dataTransfer.files : undefined);
+
+    // Clear the input value to allow re-selecting the same file if needed
+     if (fileInputRef.current) {
+       fileInputRef.current.value = '';
+     }
+
+  }, [selectedFileList, maxFiles, maxTotalSizeMB, allowedMimeTypes, toast]);
+
+  // Removed readFileAsDataURL helper
+
+  // Handler to remove a file by index
+  const handleRemoveFile = useCallback((indexToRemove: number) => {
+    setSelectedFileList(prevFileList => {
+      if (!prevFileList) return undefined;
+      const currentFiles = Array.from(prevFileList);
+      const updatedFiles = currentFiles.filter((_, index) => index !== indexToRemove);
+
+      if (updatedFiles.length === 0) return undefined;
+
+      const dataTransfer = new DataTransfer();
+      updatedFiles.forEach(file => dataTransfer.items.add(file));
+      return dataTransfer.files;
+    });
+  }, []);
+
 
   // --- START: Clipboard Paste Handling ---
   const handlePaste = useCallback(
@@ -119,7 +186,7 @@ export function ChatInput({
             continue; // Skip to next item
           }
 
-          // --- Validation ---
+          // --- Validation (using component state/constants) ---
           if (!allowedMimeTypes.includes(file.type)) {
             toast({
               title: "Unsupported File Type",
@@ -129,18 +196,19 @@ export function ChatInput({
             continue;
           }
 
-          if (selectedFiles.length >= maxFiles) {
+          const currentFilesCount = selectedFileList?.length ?? 0;
+          if (currentFilesCount >= maxFiles) {
             toast({
               title: "File Limit Reached",
               description: `You can only attach up to ${maxFiles} files.`,
               variant: "destructive",
             });
-            continue; // Don't break, allow checking other items if needed
+            continue;
           }
 
           const fileSizeMB = file.size / 1024 / 1024;
-          // Ensure totalSelectedSizeMB is treated as a number for comparison
-          if (parseFloat(totalSelectedSizeMB) + fileSizeMB > maxTotalSizeMB) {
+          const currentTotalSizeMB = selectedFilesArray.reduce((sum, f) => sum + f.size, 0) / 1024 / 1024;
+          if (currentTotalSizeMB + fileSizeMB > maxTotalSizeMB) {
             toast({
               title: "Total Size Limit Exceeded",
               description: `Adding this image would exceed the total size limit of ${maxTotalSizeMB}MB.`,
@@ -150,8 +218,16 @@ export function ChatInput({
           }
           // --- End Validation ---
 
-          // Add the valid file
-          setSelectedFiles((prevFiles) => [...prevFiles, file]);
+          // Add the valid file to the FileList state
+          setSelectedFileList(prevFileList => {
+             const dataTransfer = new DataTransfer();
+             if (prevFileList) {
+               Array.from(prevFileList).forEach(f => dataTransfer.items.add(f));
+             }
+             dataTransfer.items.add(file);
+             return dataTransfer.files;
+          });
+
 
           toast({
             title: "Image Pasted",
@@ -162,14 +238,14 @@ export function ChatInput({
       // If no image was pasted, allow default paste behavior for text, etc.
     },
     [
-      selectedFiles,
-      setSelectedFiles,
+      selectedFileList, // Use FileList state
+      setSelectedFileList,
+      selectedFilesArray, // Use derived array for size calculation
       allowedMimeTypes,
       maxFiles,
       maxTotalSizeMB,
-      totalSelectedSizeMB,
       toast,
-    ]
+    ] // Updated dependencies
   );
   // --- END: Clipboard Paste Handling ---
 
@@ -184,63 +260,34 @@ export function ChatInput({
     fileInputRef.current?.click();
   };
 
-  // Wrapper for handleSubmit to include files
-  const handleSubmitWithFiles = useCallback(
-    async (
-      e: React.FormEvent<HTMLFormElement>,
-      options?: { data?: Record<string, unknown> } // Use unknown instead of any
-    ) => {
-      e.preventDefault();
+  // Simplified handleSubmit wrapper to use experimental_attachments
+  const handleSubmitWrapper = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault(); // Prevent default form submission
 
-      const fileDataArray: Array<{
-        name: string;
-        mimeType: string;
-        data: string;
-      }> = [];
-      const attachmentInfoArray: Array<{ name: string; mimeType: string }> = [];
-
-      if (selectedFiles.length > 0) {
-        try {
-          const readPromises = selectedFiles.map(readFileAsDataURL); // Use helper from hook
-          const base64Strings = await Promise.all(readPromises);
-          selectedFiles.forEach((file, index) => {
-            fileDataArray.push({
-              name: file.name,
-              mimeType: file.type,
-              data: base64Strings[index],
-            });
-            attachmentInfoArray.push({
-              name: file.name,
-              mimeType: file.type,
-            });
-          });
-        } catch (error) {
-          console.error("Error reading files:", error);
-          toast({
-            title: "Error reading files",
-            description: "Could not process attached files. Please try again.",
-            variant: "destructive",
-          });
-          return;
-        }
-      }
-
-      // Call the callback before submitting, if provided
-      if (onBeforeSubmit && attachmentInfoArray.length > 0) {
-        onBeforeSubmit(attachmentInfoArray);
-      }
-
-      const finalData = {
-        ...options?.data,
-        activeModes: Array.from(activeModes),
-        ...(fileDataArray.length > 0 && { files: fileDataArray }),
-        // Removed localAttachments from here
+      // Prepare options for the original handleSubmit
+      const submitOptions: {
+        data?: { activeModes?: string[] };
+        experimental_attachments?: FileList;
+      } = {
+        // Pass active modes in the data payload if needed by the backend
+        data: {
+          activeModes: Array.from(activeModes),
+        },
+        // Pass the FileList directly using the experimental option
+        experimental_attachments: selectedFileList,
       };
 
-      originalHandleSubmit(e, { data: finalData });
+      // Call the original handleSubmit passed via props
+      originalHandleSubmit(e, submitOptions);
 
-      // Clear files using the hook's setter
-      setSelectedFiles([]);
+      // Clear the selected files state
+      setSelectedFileList(undefined);
+      // Clear the file input visually
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
       if (isModalOpen) {
         setIsModalOpen(false); // Close modal if open
       }
@@ -251,26 +298,22 @@ export function ChatInput({
       }
     },
     [
-      selectedFiles,
       activeModes,
+      selectedFileList, // Depend on FileList state
       originalHandleSubmit,
-      toast,
       isModalOpen,
-      setSelectedFiles,
-      inputRef,
-      onBeforeSubmit,
-    ]
-  ); // Added onBeforeSubmit dependency
+      // Removed toast dependency as file reading errors are gone
+    ] // Simplified dependencies
+  );
 
   // Get available modes
   const availableModes = getAllChatModes();
 
-  // Determine if submit button should be disabled based on loading, input, files, and the new disabled prop
+  // Determine if submit button should be disabled
   const isSubmitDisabled =
-    disabled || // Check the main disabled prop first
+    disabled ||
     isLoading ||
-    // isMessageLimitReached || // Remove old frontend limit check
-    (!input.trim() && selectedFiles.length === 0);
+    (!input.trim() && selectedFilesArray.length === 0); // Use derived array
 
   // Handle keydown for Cmd/Ctrl+Enter
   const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -289,19 +332,19 @@ export function ChatInput({
       <input
         type="file"
         ref={fileInputRef}
-        onChange={handleFileSelection} // Use handler from hook
+        onChange={handleFileChange} // Use updated handler
         multiple
-        accept={allowedMimeTypes.join(",")} // Use types from hook
+        accept={allowedMimeTypes.join(",")} // Use component constants
         className="hidden"
         aria-hidden="true"
       />
 
       <div className="sticky bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border border-border/40 rounded-xl py-4">
         <div className="container max-w-4xl mx-auto px-4">
-          {/* Use the wrapper handleSubmit for the main form, add ref */}
+          {/* Use the simplified handleSubmit wrapper */}
           <form
             ref={formRef}
-            onSubmit={handleSubmitWithFiles}
+            onSubmit={handleSubmitWrapper}
             className="relative"
           >
             <div
@@ -399,8 +442,8 @@ export function ChatInput({
                           size="icon"
                           className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
                           disabled={
-                            disabled || isLoading || selectedFiles.length >= maxFiles // Apply disabled prop
-                          } // Use maxFiles from hook
+                            disabled || isLoading || selectedFilesArray.length >= maxFiles // Use derived array length
+                          }
                           onClick={triggerFileInput}
                           aria-label="Attach file"
                         >
@@ -436,13 +479,13 @@ export function ChatInput({
                 </div>
               </div>
 
-              {/* Use FileAttachmentDisplay component */}
+              {/* TODO: Update FileAttachmentDisplay to accept File[] instead of FileList or adjust here */}
               <FileAttachmentDisplay
-                selectedFiles={selectedFiles}
-                handleRemoveFile={handleRemoveFile}
+                selectedFiles={selectedFilesArray} // Pass the derived array
+                handleRemoveFile={handleRemoveFile} // Pass remove handler
                 maxFiles={maxFiles}
                 maxTotalSizeMB={maxTotalSizeMB}
-                totalSelectedSizeMB={totalSelectedSizeMB}
+                totalSelectedSizeMB={totalSelectedSizeMB.toFixed(2)} // Pass calculated size
               />
 
               {/* Use ChatModeToggles component */}
@@ -462,15 +505,16 @@ export function ChatInput({
         onOpenChange={setIsModalOpen}
         input={input}
         handleInputChange={handleInputChange}
-        handleSubmit={handleSubmitWithFiles} // Pass the main submit handler
+        handleSubmit={handleSubmitWrapper} // Pass the simplified wrapper
         isLoading={isLoading}
         isSubmitDisabled={isSubmitDisabled}
         placeholder={placeholder}
-        selectedFiles={selectedFiles}
-        handleRemoveFile={handleRemoveFile}
+        // TODO: Update FullscreenInputModal props for file handling
+        selectedFiles={selectedFilesArray} // Pass derived array
+        handleRemoveFile={handleRemoveFile} // Pass remove handler
         maxFiles={maxFiles}
         maxTotalSizeMB={maxTotalSizeMB}
-        totalSelectedSizeMB={totalSelectedSizeMB}
+        totalSelectedSizeMB={totalSelectedSizeMB.toFixed(2)} // Pass calculated size
         disabled={disabled} // Pass disabled prop down
       />
     </>

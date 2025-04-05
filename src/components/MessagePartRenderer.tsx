@@ -17,6 +17,7 @@ import { SearchResult, type Source as AppSource } from '@/components/SearchResul
 import { type DisplayMoleculeArgs } from '@/lib/tools/displayMoleculeTool'; // Import args type
 import { type DisplayPlotArgs } from '@/lib/tools/displayPlotTool'; // Import plot args type
 import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton for loading state
+import { FileText } from 'lucide-react'; // Import FileText
 
 // Import PlotDisplay
 import { PlotDisplay } from '@/components/PlotDisplay';
@@ -452,6 +453,38 @@ export const MessagePartRenderer: React.FC<MessagePartRendererProps> = ({
               </div>
             );
           } // End case 'tool-invocation'
+
+          case 'file': {
+            // Render a placeholder for file parts received from the AI
+            // The actual file data might be in part.data (Buffer/Uint8Array) or part.url
+            // depending on the model/provider. The filename isn't directly on the FilePart.
+            // We'll just indicate the type for now.
+            // const filename = part.filename || 'attached file'; // filename is not on FilePart type
+            const mimeType = part.mimeType || 'unknown type';
+            return (
+              <div
+                key={`${message.id}-file-${index}`}
+                className="my-2 rounded bg-muted p-2 text-sm text-muted-foreground"
+              >
+                <div className="font-mono text-xs flex items-center gap-1">
+                  <FileText className="h-3 w-3" /> {/* Use FileText icon */}
+                  <span>AI referenced file:</span>
+                  {/* Removed filename display as it's not available on FilePart */}
+                  {/* <span className="font-semibold" title={filename}>{truncateFileName(filename, 20)}</span> */}
+                  <span>({mimeType})</span>
+                </div>
+                {/* TODO: Add actual rendering logic here if needed, e.g., for images/PDFs using part.data or part.url */}
+                {/* {part.mimeType?.startsWith('image/') && part.data && (
+                  <img
+                    src={`data:${part.mimeType};base64,${Buffer.from(part.data).toString('base64')}`}
+                    alt={filename}
+                    className="mt-1 max-w-full h-auto rounded"
+                  />
+                )} */}
+              </div>
+            );
+          } // End case 'file'
+
 
           default:
             // Render unknown part types as placeholder or null

@@ -1,13 +1,10 @@
-import { CoreMessage, smoothStream, streamText } from 'ai';
+import { CoreMessage, streamText, smoothStream } from 'ai'; // Keep CoreMessage, streamText, smoothStream
 import { NextResponse } from 'next/server';
 import { createClient } from '@/utils/supabase/server'; // Import server-side Supabase client
 import { gemini25ProModel } from '@/lib/vertex'; // Non-grounded model for chat
+// Removed Buffer import
 
 // Import helpers and tools
-import {
-  processAndAttachFiles,
-  type ReceivedFileData,
-} from '@/lib/api/fileProcessor';
 import { buildSystemPrompt } from '@/lib/api/promptHelper';
 import { webSearchTool } from '@/lib/tools/webSearchTool';
 import { displayCodeTool } from '@/lib/tools/displayCodeTool';
@@ -108,30 +105,34 @@ export async function POST(req: Request): Promise<Response> {
     // --- End Authentication and Usage Check/Increment ---
 
 
-    // 1. Parse Request Body (moved after auth/usage check)
-    const { messages = [], data }: { messages?: CoreMessage[]; data?: { activeModes?: string[]; files?: ReceivedFileData[]; localAttachments?: Array<{ name: string; mimeType: string }> } } = await req.json();
+    // 1. Parse Request Body
+    // The AI SDK handles `experimental_attachments` and embeds them in `messages`.
+    // We might still receive custom data like activeModes.
+    const { messages = [], data }: {
+      messages?: CoreMessage[];
+      data?: { activeModes?: string[] } // Only expect activeModes in data now
+    } = await req.json();
 
     const receivedActiveModeIds = data?.activeModes ?? [];
-    const receivedFiles = data?.files ?? [];
-    const localAttachments = data?.localAttachments ?? []; // Extract localAttachments
     console.log('[API] Received active modes:', receivedActiveModeIds);
-    console.log(`[API] Received ${receivedFiles.length} files.`);
-    console.log(`[API] Received ${localAttachments.length} local attachment metadata entries.`); // Log extracted metadata
+    if (messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        console.log('[API] Last message content:', JSON.stringify(lastMessage.content, null, 2));
+        if (Array.isArray(lastMessage.content)) {
+            const fileParts = lastMessage.content.filter(part => part.type === 'file');
+            console.log(`[API] Found ${fileParts.length} file parts processed by SDK in last message.`);
+        }
+    }
 
-    // Make a mutable copy of messages to allow modification by file processor
-    const messagesToSend: CoreMessage[] = [...messages];
-
-    // 2. Process Files and Attach Metadata (modifies messagesToSend in place)
-    processAndAttachFiles(messagesToSend, receivedFiles); // Removed localAttachments argument
-
-    // 3. Build System Prompt
+    // 2. Build System Prompt
     const finalSystemPrompt = buildSystemPrompt(receivedActiveModeIds);
 
-    // 4. Call AI Model
+    // 3. Call AI Model
+    // Pass the messages array directly as received from the request body
     const result = await streamText({
-      model: gemini25ProModel, // Use the non-grounded Pro model for generation
-      messages: messagesToSend, // Use the potentially modified messages array
-      system: finalSystemPrompt, // Use combined system prompt from helper
+      model: gemini25ProModel,
+      messages: messages, // Pass messages directly
+      system: finalSystemPrompt,
       temperature: 0.7,
       tools: tools, // Provide defined tools from imported modules
       maxSteps: 2, // Allow multiple steps for tool execution + final response

@@ -30,14 +30,10 @@ import Link from 'next/link';
 
 // Removed SdkSource as it's handled in MessagePartRenderer
 
-/** Represents attachment information stored locally or passed from ChatInput. */
-type LocalAttachmentInfo = {
-  name: string;
-  mimeType: string;
-};
+// Removed LocalAttachmentInfo type definition
 
-// Extend Message type locally to include optional attachments
-type MessageWithAttachments = Message & { attachments?: LocalAttachmentInfo[] };
+// Removed local MessageWithAttachments type definition
+// type MessageWithAttachments = Message & { attachments?: LocalAttachmentInfo[] };
 
 
 // --- Constants ---
@@ -79,8 +75,8 @@ export default function Chat() {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState<string>('');
   const [activeModes, setActiveModes] = useState<Set<string>>(new Set());
-  // State to hold attachments temporarily before adding to the message
-  const [pendingAttachments, setPendingAttachments] = useState<LocalAttachmentInfo[] | null>(null);
+  // Removed pendingAttachments state
+  // const [pendingAttachments, setPendingAttachments] = useState<LocalAttachmentInfo[] | null>(null);
   // State to hold the authenticated user
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   // State to track if the daily backend limit was hit
@@ -91,7 +87,7 @@ export default function Chat() {
     messages: rawMessages, // Renamed to avoid conflict with processed messages
     input,
     handleInputChange,
-    handleSubmit: originalHandleSubmit,
+    handleSubmit, // Use handleSubmit directly from useChat
     isLoading,
     setMessages,
     reload,
@@ -217,10 +213,10 @@ export default function Chat() {
     [toast], // Depends on toast
   );
 
-  /** Callback for ChatInput to pass attachments before submission */
-  const handleBeforeSubmit = React.useCallback((attachments: LocalAttachmentInfo[]) => {
-    setPendingAttachments(attachments);
-  }, []); // No dependencies, just sets state
+  // Removed handleBeforeSubmit callback
+  // const handleBeforeSubmit = React.useCallback((attachments: LocalAttachmentInfo[]) => {
+  //   setPendingAttachments(attachments);
+  // }, []);
 
   /** Regenerates the response for an assistant message. */
   const handleRegenerate = React.useCallback(
@@ -248,36 +244,8 @@ export default function Chat() {
     [isLoading, messages, setMessages, reload, toast], // Dependencies
   );
 
-  /** Wraps the original handleSubmit to include active modes and handle local attachments. */
-  const handleSubmitWrapper = React.useCallback(
-    (
-      e: React.FormEvent<HTMLFormElement>,
-      options?: {
-        // Use unknown instead of any for better type safety
-        data?: Record<string, unknown> & {
-          localAttachments?: LocalAttachmentInfo[];
-        };
-      },
-    ) => {
-      const activeModeIds = Array.from(activeModes);
-      // Files are now handled by the ChatInput component and passed in options.data.files
-      // We just need to ensure activeModes is included.
-
-      // Prepare data for the actual backend submission
-      const backendData = {
-        ...options?.data, // Include any data from ChatInput (like files)
-        activeModes: activeModeIds, // Add active modes
-      };
-      // localAttachments is no longer passed from ChatInput in the data object
-
-      console.log('Submitting with data:', backendData); // Debug log
-
-      originalHandleSubmit(e, {
-        data: backendData,
-      });
-    },
-    [activeModes, originalHandleSubmit], // Dependencies
-  );
+  // Removed handleSubmitWrapper - ChatInput now handles options directly
+  // const handleSubmitWrapper = React.useCallback( ... );
 
   // --- Effects ---
 
@@ -286,30 +254,8 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]); // Dependency on the number of messages
 
-  // Effect to add pending attachments to the last user message
-  React.useEffect(() => {
-    if (pendingAttachments && messages.length > 0) {
-      const lastMessageIndex = messages.length - 1;
-      const lastMessage = messages[lastMessageIndex] as MessageWithAttachments; // Assert local type
-
-      // Check if it's a user message and doesn't already have attachments property
-      if (lastMessage.role === 'user' && !lastMessage.attachments) {
-        const updatedMessage: MessageWithAttachments = {
-          ...lastMessage,
-          attachments: pendingAttachments, // Add the attachments
-        };
-
-        // Update the messages array
-        setMessages((currentMessages) => [
-          ...currentMessages.slice(0, lastMessageIndex),
-          updatedMessage,
-        ]);
-
-        // Clear pending attachments
-        setPendingAttachments(null);
-      }
-    }
-  }, [messages, pendingAttachments, setMessages]); // Dependencies
+  // Removed effect for pendingAttachments
+  // React.useEffect(() => { ... }, [messages, pendingAttachments, setMessages]);
 
   // --- User Authentication ---
   const supabase = createClient();
@@ -456,13 +402,14 @@ export default function Chat() {
         <ChatInput
           input={input}
           handleInputChange={handleInputChange}
-          handleSubmit={handleSubmitWrapper}
+          handleSubmit={handleSubmit} // Pass handleSubmit directly
           isLoading={isLoading}
           activeModes={activeModes}
           toggleChatMode={handleToggleChatMode} // Use renamed handler
           // Removed unused setMessages prop being passed
           // setMessages={setMessages}
-          onBeforeSubmit={handleBeforeSubmit} // Pass the callback
+          // Removed onBeforeSubmit prop
+          // onBeforeSubmit={handleBeforeSubmit}
           stop={stop} // Pass stop function
           status={status} // Pass status
           // Removed props related to old frontend limit
