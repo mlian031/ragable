@@ -17,7 +17,7 @@ interface TopRightMenuProps {
 export function TopRightMenu({ user }: TopRightMenuProps) {
   // Accept user prop
   return (
-    <div className="absolute top-4 right-4 z-50 backdrop:blur-lg bg-background/80 rounded-lg">
+    <div className="fixed top-4 right-4 z-50 backdrop:blur-lg bg-background/80 rounded-lg">
       {" "}
       {/* Added z-index */}
       <div className="flex flex-row items-center space-x-2 backdrop-blur-lg bg-background/80 rounded-lg p-2 border">
