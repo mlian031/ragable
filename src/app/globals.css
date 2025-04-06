@@ -65,6 +65,47 @@
 }
 
 @layer base {
+
+  /* Subtle link styling inside markdown content */
+  .prose a {
+    color: var(--color-primary);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--color-primary);
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .prose a:hover {
+    border-bottom-style: solid;
+    color: var(--color-primary-foreground);
+  }
+
+  /* Custom styling for changelog markdown content */
+  .changelog-content h2 {
+    font-size: 1.5rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.3rem;
+    border-bottom: 2px solid var(--color-border);
+    color: var(--color-primary);
+  }
+
+  .changelog-content ul {
+    margin-left: 1.5rem;
+    list-style-type: disc;
+    padding-left: 1rem;
+  }
+
+  .changelog-content li {
+    margin-bottom: 0.5rem;
+  }
+
+  .changelog-content h3 {
+    font-size: 1.25rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-primary);
+  }
   /* Enhanced heading spacing */
   .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
     margin-top: 2rem;

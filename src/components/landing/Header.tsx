@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle"; // Import ThemeToggle
+import { createClient } from "@/utils/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+    };
+    fetchUser();
+  }, []);
 
   return (
     <header className="py-4 border-b">
@@ -37,10 +49,10 @@ export default function Header() {
             Contact Sales
           </Link>
           <Link
-            href="/signup"
+            href={user ? "/profile" : "/signup"}
             className="dark:bg-neutral-800 dark:border-2 text-white dark:text-white block text-sm font-medium px-4 py-2 bg-primary rounded-md hover:bg-primary/90"
           >
-            Sign up for free
+            {user ? "Dashboard" : "Sign up for free"}
           </Link>
           <ThemeToggle /> {/* Add ThemeToggle here */}
         </nav>
@@ -101,11 +113,11 @@ export default function Header() {
             Contact Sales
           </Link>
           <Link
-            href="/signup"
+            href={user ? "/profile" : "/signup"}
             className="dark:bg-neutral-800 dark:border-2 text-white dark:text-white block text-sm font-medium px-4 py-2 bg-primary rounded-md hover:bg-primary/90 w-full text-center"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            Start using Ragable free
+            {user ? "Dashboard" : "Start using Ragable free"}
           </Link>
           <div className="pt-4"> {/* Add some spacing */}
             <ThemeToggle /> {/* Add ThemeToggle here */}

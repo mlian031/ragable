@@ -38,9 +38,10 @@ export const TOOL_USAGE_POLICIES = `
 export const FORMATTING_RULES = `
 # Formatting Rules
 - Use markdown for clarity: headings, lists, emphasis.
-- Use **single dollar signs** $ for inline LaTeX math, e.g., $E=mc^2$. 
-- Use **double dollar signs** $$ for block LaTeX math. Add two blank lines before and after the block.
-- Use block LaTeX whenever possible. Avoid inline math unless TRULY necessary.
+- **Always** use **double dollar signs** $$ ... $$ for **ALMOST ALL** LaTeX math expressions, even short ones.
+- **NEVER** use single dollar signs $ ... $ for inline math. Exceptions are allowed for single symbols like $\pi$.
+- Place each LaTeX block on its own lines, surrounded by double dollar signs, with two blank lines before and after.
+- Optionally, add markdown horizontal rules (\`---\`) before and after groups of related LaTeX blocks to visually separate sections.
 - For citations, place them **immediately after** relevant statements, not at the end.
 - Citation format: [Source Title](URL)
 - Avoid using $ for currency; write "USD" instead.
