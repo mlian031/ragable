@@ -1,9 +1,23 @@
 # Changelog
 
 ---
-version: 0.0.21
+version: 0.0.22
 date: 2025-04-06
 title: v0.0.21 (2025-04-06)
+---
+
+## New Features
+
+- Improved system prompts
+
+## Bug Fixes
+
+- Improve latex rendering
+
+---
+version: 0.0.21
+date: 2025-04-05
+title: v0.0.21 (2025-04-05)
 ---
 
 ## New Features
