@@ -344,7 +344,7 @@ export function ChatInput({
       />
 
       <div className="sticky bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm border border-border/40 rounded-xl py-4">
-        <div className="container max-w-4xl mx-auto px-4">
+        <div className="container max-w-full sm:max-w-4xl mx-auto px-2 sm:px-4">
           {/* Use the simplified handleSubmit wrapper */}
           <form
             ref={formRef}
@@ -396,7 +396,7 @@ export function ChatInput({
                       />
                     </div>
                     <div className="flex-none text-right">
-                      <div className="flex flex-row gap-1 items-center pb-[7px]">
+                      <div className="flex flex-row flex-wrap gap-1 items-center pb-[7px]">
                         {isLoading && (
                           <div className="flex space-x-1 items-center mr-1">
                             <div
@@ -430,7 +430,7 @@ export function ChatInput({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
                           disabled={isLoading || disabled} // Apply disabled prop
                           onClick={() => setIsModalOpen(true)} // Open modal
                           aria-label="Fullscreen mode"
@@ -441,7 +441,7 @@ export function ChatInput({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
                           disabled={
                             disabled || isLoading || selectedFilesArray.length >= maxFiles // Use derived array length
                           }
@@ -455,7 +455,7 @@ export function ChatInput({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
+                          className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground shrink-0"
                           disabled={isLoading || disabled} // Apply disabled prop
                           aria-label="Voice input"
                         >

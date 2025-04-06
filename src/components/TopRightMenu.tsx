@@ -1,6 +1,6 @@
 "use client"; // Needs to be a client component for SignOutButton interaction later
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { LogIn, User as UserIcon } from "lucide-react";
@@ -15,20 +15,40 @@ interface TopRightMenuProps {
 }
 
 export function TopRightMenu({ user }: TopRightMenuProps) {
-  // Accept user prop
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
-    <div className="fixed top-4 right-4 z-50 backdrop:blur-lg bg-background/80 rounded-lg">
-      {" "}
-      {/* Added z-index */}
-      <div className="flex flex-row items-center space-x-2 backdrop-blur-lg bg-background/80 rounded-lg p-2 border">
-        {" "}
-        {/* Adjusted styling */}
+    <div className="fixed top-2 right-2 sm:top-4 sm:right-4 z-50 backdrop:blur-lg bg-background/80 rounded-lg p-1 sm:p-2 border">
+      {/* Hamburger toggle button, visible only on mobile */}
+      <button
+        className="sm:hidden p-2 rounded border"
+        onClick={() => setMenuOpen(!menuOpen)}
+        aria-label="Toggle menu"
+      >
+        {/* Simple hamburger icon */}
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      {/* Menu items */}
+      <div
+        className={`${
+          menuOpen ? "flex" : "hidden"
+        } sm:flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 space-x-0 sm:space-x-2 mt-2 sm:mt-0`}
+      >
         <div className="px-1">
           <Link href="/settings" passHref>
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 px-2 py-1 h-auto text-xs"
+              className="flex items-center space-x-1 px-2 py-1 h-auto text-xs w-full sm:w-auto justify-start sm:justify-center"
             >
               <span>Settings</span>
             </Button>
@@ -39,19 +59,18 @@ export function TopRightMenu({ user }: TopRightMenuProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 px-2 py-1 h-auto text-xs"
+              className="flex items-center space-x-1 px-2 py-1 h-auto text-xs w-full sm:w-auto justify-start sm:justify-center"
             >
               <span>Chat</span>
             </Button>
           </Link>
         </div>
-        <div className="px-1"> {/* Wrap the toggle */}
+        <div className="px-1">
           <SimpleThemeToggle />
         </div>
         {user ? (
           <>
-            {/* Display user email or placeholder */}
-            <Badge variant="secondary" className="px-2 py-1 text-xs">
+            <Badge variant="secondary" className="px-2 py-1 text-xs w-full sm:w-auto">
               <Link
                 href="/profile"
                 className="flex items-center space-x-1"
@@ -63,24 +82,20 @@ export function TopRightMenu({ user }: TopRightMenuProps) {
                 </span>
               </Link>
             </Badge>
-            {/* Use the actual SignOutButton component */}
             <SignOutButton />
           </>
         ) : (
-          // Show Sign In link if not logged in
           <Link href="/login" passHref>
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 px-2 py-1 h-auto text-xs"
+              className="flex items-center space-x-1 px-2 py-1 h-auto text-xs w-full sm:w-auto justify-start sm:justify-center"
             >
               <LogIn className="h-3 w-3" />
               <span>Sign In</span>
             </Button>
           </Link>
         )}
-        {/* Optional: Keep other links like Settings if needed */}
-        {/* <div className="px-1"> ... Settings Link ... </div> */}
       </div>
     </div>
   );
