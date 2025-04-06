@@ -5,6 +5,7 @@ import { memo, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math'; // Import remark-math
+import remarkBreaks from 'remark-breaks'; // Import remark-breaks plugin
 import rehypeKatex from 'rehype-katex'; // Import rehype-katex
 
 // Helper function to parse markdown into blocks using marked
@@ -21,7 +22,10 @@ const MemoizedMarkdownBlock = memo(
   ({ content }: { content: string }) => {
     // Render the block using ReactMarkdown with GFM, Math, and Katex plugins
     return (
-      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[rehypeKatex]}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
+        rehypePlugins={[rehypeKatex]}
+      >
         {content}
       </ReactMarkdown>
     );
