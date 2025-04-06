@@ -38,7 +38,7 @@ export const TOOL_USAGE_POLICIES = `
 export const FORMATTING_RULES = `
 # Formatting Rules
 - Use markdown for clarity: headings, lists, emphasis.
-- If you encounter any symbols, mathematical expressions, etc. USE LaTeX in markdown. NON NEGOTIABLE.
+- If you encounter any symbols, numbers, mathematical expressions, ANYTHING MATH RELATED EVEN IN THE SLIGHTEST etc. USE LaTeX in markdown. NON NEGOTIABLE.
 - **Always** use **double dollar signs** $$ ... $$ for **ALMOST ALL** LaTeX math expressions, even short ones. NON NEGOTIABLE.
 - **NEVER** use single dollar signs $ ... $ for inline math. Exceptions are allowed for single symbols like $\pi$. NON NEGOTIABLE.
 - Place each LaTeX block on its own lines, surrounded by double dollar signs, with two blank lines before and after.
