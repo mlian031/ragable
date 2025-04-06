@@ -1,9 +1,26 @@
 # Changelog
 
 ---
+version: 0.0.23
+date: 2025-04-07
+title: v0.0.23 (2025-04-06)
+---
+
+## New Features
+
+- Some UI fixes
+
+## Coming Soon
+
+- Course spaces
+- Self-checkout for the Pro Plan
+- One click exam generation
+- Agent mode
+
+---
 version: 0.0.22
 date: 2025-04-06
-title: v0.0.21 (2025-04-06)
+title: v0.0.22 (2025-04-06)
 ---
 
 ## New Features
@@ -35,5 +52,3 @@ title: v0.0.21 (2025-04-05)
 
 - Course spaces
 - Self-checkout for Pro Plan
-- (Codename: Stardust)
-
