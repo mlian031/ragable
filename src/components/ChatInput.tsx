@@ -51,6 +51,8 @@ interface ChatInputProps {
   // maxChatMessages: number;
   // Add disabled prop
   disabled?: boolean;
+
+  onInputAndFilesChange?: (inputText: string, files: File[]) => void;
 }
 
 export function ChatInput({
@@ -71,6 +73,7 @@ export function ChatInput({
   // currentMessageCount,
   // maxChatMessages,
   disabled = false, // Destructure disabled prop with default value
+  onInputAndFilesChange, // Add destructure for callback prop
 }: ChatInputProps) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -264,6 +267,13 @@ export function ChatInput({
       inputRef.current.focus();
     }
   }, [isModalOpen]); // Re-run if modal state changes
+
+  // Notify parent of input text and files changes
+  useEffect(() => {
+    if (typeof onInputAndFilesChange === 'function') {
+      onInputAndFilesChange(input, selectedFilesArray);
+    }
+  }, [input, selectedFilesArray, onInputAndFilesChange]);
 
   const triggerFileInput = () => {
     fileInputRef.current?.click();

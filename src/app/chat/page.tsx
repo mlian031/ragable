@@ -72,6 +72,16 @@ export default function Chat() {
   const [tokenUsage, setTokenUsage] = React.useState<Map<string, number>>(
     new Map(),
   );
+  const [contextUsagePercent, setContextUsagePercent] = useState<number>(0);
+
+  const [inputText, setInputText] = useState<string>('');
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+
+  const estimateTokens = (text: string) => {
+    if (!text) return 0;
+    return Math.ceil(text.length / 4); // Rough estimate: 1 token ≈ 4 characters
+  };
+
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState<string>('');
   const [activeModes, setActiveModes] = useState<Set<string>>(new Set());
@@ -254,6 +264,24 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]); // Dependency on the number of messages
 
+  /** Updates context window usage percentage */
+  React.useEffect(() => {
+    let totalTokens = 0;
+    for (const m of messages) {
+      if (m.role === 'assistant' && tokenUsage.has(m.id)) {
+        totalTokens += tokenUsage.get(m.id)!;
+      } else if (m.role === 'user') {
+        totalTokens += estimateTokens(getMessageText(m));
+      }
+    }
+
+    // Add estimated tokens for current input text
+    totalTokens += estimateTokens(inputText);
+
+    const percent = Math.min(100, (totalTokens / 1_000_000) * 100);
+    setContextUsagePercent(percent);
+  }, [messages, tokenUsage, inputText, attachedFiles]);
+
   // Removed effect for pendingAttachments
   // React.useEffect(() => { ... }, [messages, pendingAttachments, setMessages]);
 
@@ -397,6 +425,19 @@ export default function Chat() {
           </Alert>
         )}
 
+        {/* Context Window Usage Indicator */}
+        <div className="mb-4">
+          <div className="mb-1 text-xs font-medium text-muted-foreground">
+            Context Size: {contextUsagePercent.toFixed(1)}%
+          </div>
+          <div className="w-full h-2 bg-gray-200 rounded">
+            <div
+              className="h-2 rounded bg-blue-500"
+              style={{ width: `${contextUsagePercent}%` }}
+            />
+          </div>
+        </div>
+
         {/* Chat Input Area */}
         {/* Disable input if daily limit is reached */}
         <ChatInput
@@ -416,6 +457,10 @@ export default function Chat() {
           // currentMessageCount={currentMessageCount}
           // maxChatMessages={MAX_CHAT_MESSAGES}
           disabled={isDailyLimitReached} // Disable input when daily limit is hit
+          onInputAndFilesChange={(inputText, files) => {
+            setInputText(inputText);
+            setAttachedFiles(files);
+          }}
         />
       </div>
     </TooltipProvider>
