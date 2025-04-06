@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { SendHorizontal, Mic, Paperclip, Maximize2 } from "lucide-react"; // Added X
 import { useToast } from "@/components/ui/use-toast";
 import { getAllChatModes } from "@/config/chat-modes"; // Import mode config utils
+import { ContextUsageInfo } from "@/components/ContextUsageInfo";
 // Removed useFileHandling import
 import { FileAttachmentDisplay } from "./FileAttachmentDisplay"; // Import new component
 import { ChatModeBadges } from "./ChatModeBadges"; // Import new component
@@ -26,54 +27,38 @@ interface ChatInputProps {
   ) => void;
   handleSubmit: (
     e: React.FormEvent<HTMLFormElement>,
-    // Align with useChat's experimental_attachments option
     options?: {
       data?: {
         activeModes?: string[];
       };
-      experimental_attachments?: FileList; // Expect FileList here
+      experimental_attachments?: FileList;
     }
   ) => void;
   isLoading: boolean;
   placeholder?: string;
-  // Removed onBeforeSubmit prop
-  // onBeforeSubmit?: (attachments: LocalAttachmentInfo[]) => void;
-  // New props for dynamic modes
   activeModes: Set<string>;
   toggleChatMode: (modeId: string) => void;
-  // Removed unused setMessages prop
-  // setMessages: (messages: Message[] | ((currentMessages: Message[]) => Message[])) => void;
-  // Add stop and status props
   stop: () => void;
   status: "submitted" | "streaming" | "ready" | "error";
-  // Removed unused message count props from interface
-  // currentMessageCount: number;
-  // maxChatMessages: number;
-  // Add disabled prop
   disabled?: boolean;
-
   onInputAndFilesChange?: (inputText: string, files: File[]) => void;
+
+  contextUsagePercent: number;
 }
 
 export function ChatInput({
   input,
   handleInputChange,
-  handleSubmit: originalHandleSubmit, // Rename original prop
+  handleSubmit: originalHandleSubmit,
   isLoading,
   placeholder = "Ask about anything...",
   activeModes,
   toggleChatMode,
-  // Removed unused setMessages from destructuring
-  // setMessages,
-  // Removed onBeforeSubmit from destructuring
-  // onBeforeSubmit,
-  stop, // Destructure stop
-  status, // Destructure status
-  // Removed unused message count props from destructuring
-  // currentMessageCount,
-  // maxChatMessages,
-  disabled = false, // Destructure disabled prop with default value
-  onInputAndFilesChange, // Add destructure for callback prop
+  stop,
+  status,
+  disabled = false,
+  onInputAndFilesChange,
+  contextUsagePercent,
 }: ChatInputProps) {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -368,14 +353,17 @@ export function ChatInput({
           >
             <div
               className={cn(
-                "rounded-xl border bg-background transition-all duration-300 shadow-sm flex flex-col", // Added flex flex-col
+                "rounded-xl border bg-background transition-all duration-300 shadow-sm flex flex-col",
                 isFocused
                   ? "ring-2 ring-primary/20 border-primary/30"
                   : "border-border/60"
               )}
             >
-              {/* Top Section: Badges and Input */}
               <div className="flex flex-col">
+                {/* Context Usage Info */}
+                <div className="mt-2 px-3"><ContextUsageInfo percent={contextUsagePercent} />
+                </div>
+
                 {/* Use ChatModeBadges component */}
                 <ChatModeBadges activeModes={activeModes} />
 
@@ -394,18 +382,12 @@ export function ChatInput({
                       <Textarea
                         ref={inputRef}
                         rows={1} // Start with a single row
-                        className="w-full border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-3 min-h-[48px] rounded-none text-sm bg-transparent resize-none overflow-y-hidden" // Keep w-full here for inner element
+                        className="w-full border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-3 min-h-[48px] max-h-[250px] overflow-y-auto rounded-none text-sm bg-transparent resize-none" // Enforce max height with scroll
                         value={input}
                         placeholder={placeholder}
                         onKeyDown={handleKeyDown} // Add keydown handler
                         onChange={(e) => {
                           handleInputChange(e);
-                          // Auto-resize logic
-                          e.target.style.height = "inherit"; // Reset height
-                          e.target.style.height = `${e.target.scrollHeight}px`; // Set to scroll height
-                          // Prevent excessive growth (optional, adjust max-height as needed)
-                          e.target.style.overflowY =
-                            e.target.scrollHeight > 200 ? "auto" : "hidden"; // Show scrollbar if very tall
                         }}
                         disabled={isLoading || disabled} // Apply disabled prop
                         onFocus={() => setIsFocused(true)}

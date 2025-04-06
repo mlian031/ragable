@@ -74,29 +74,8 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     label: 'Plotting Enabled',
     commonLabel: 'Plotting',
     icon: LineChart,
-    systemPrompt: `
-# Plotting Mode Instructions
-1. When the user mentions mathematical functions or requests visualization:
-   - Identify the relevant function(s).
-   - **You MUST use the displayPlot tool** to generate plots.
-2. Provide relevant options (title, axis labels, domain) if specified or easily inferred.
-3. Run the tool **before** composing your explanation.
-4. Describe the plot and insights after visualization.
-
-# Prohibited
-- Do NOT fabricate plots.
-- Do NOT skip the plotting step.
-- Do NOT provide explanations before running the tool.
-`,
+    systemPrompt: ``,
   },
-  // DOUBLE_CHECK: {
-  //   id: 'DOUBLE_CHECK',
-  //   label: 'Double Check Enabled',
-  //   commonLabel: 'Double Check',
-  //   icon: CheckCheck,
-  //   systemPrompt: `Politely inform the user this tool is not available in this environment.`
-  //   // No system prompt needed for now
-  // },
   ACADEMIC_WRITING: { // Added new mode
     id: 'ACADEMIC_WRITING',
     label: 'Academic Writing Assistant Enabled',
@@ -104,13 +83,6 @@ export const CHAT_MODES: Record<string, ChatMode> = {
     icon: Quote,
     systemPrompt: ACADEMIC_WRITING_PROMPT,
   },
-  // Example for future:
-  // CALCULATOR_MODE: {
-  //   id: 'CALCULATOR_MODE',
-  //   label: 'Calculator Mode Active',
-  //   icon: Calculator, // Assuming Calculator icon exists
-  //   // Might not need a system prompt, could use a different flag
-  // },
 };
 
 // Helper to get a mode by ID

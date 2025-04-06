@@ -16,7 +16,7 @@ export function ChatModeBadges({ activeModes }: ChatModeBadgesProps) {
   }
 
   return (
-    <div className="px-3 pt-2 flex flex-wrap gap-1">
+    <div className="px-3 pt-1 flex flex-wrap gap-1">
       {currentActiveModesDetails.map((mode) => {
         // Determine dot color based on mode ID
         let dotColorClass = 'bg-gray-500'; // Default

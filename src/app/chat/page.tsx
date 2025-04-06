@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react'; // Import useState and useEffect
 import { useChat, type Message } from '@ai-sdk/react';
 import { Cpu, TriangleAlert } from 'lucide-react'; // Removed unused: Copy, Edit, FileText, ImageIcon, RotateCw
 import type { User } from '@supabase/supabase-js'; // Import User type
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -278,7 +277,7 @@ export default function Chat() {
     // Add estimated tokens for current input text
     totalTokens += estimateTokens(inputText);
 
-    const percent = Math.min(100, (totalTokens / 1_000_000) * 100);
+    const percent = Math.min(100, (totalTokens / 500_000) * 100);
     setContextUsagePercent(percent);
   }, [messages, tokenUsage, inputText, attachedFiles]);
 
@@ -425,19 +424,6 @@ export default function Chat() {
           </Alert>
         )}
 
-        {/* Context Window Usage Indicator */}
-        <div className="mb-4">
-          <div className="mb-1 text-xs font-medium text-muted-foreground">
-            Context Size: {contextUsagePercent.toFixed(1)}%
-          </div>
-          <div className="w-full h-2 bg-gray-200 rounded">
-            <div
-              className="h-2 rounded bg-blue-500"
-              style={{ width: `${contextUsagePercent}%` }}
-            />
-          </div>
-        </div>
-
         {/* Chat Input Area */}
         {/* Disable input if daily limit is reached */}
         <ChatInput
@@ -447,16 +433,10 @@ export default function Chat() {
           isLoading={isLoading}
           activeModes={activeModes}
           toggleChatMode={handleToggleChatMode} // Use renamed handler
-          // Removed unused setMessages prop being passed
-          // setMessages={setMessages}
-          // Removed onBeforeSubmit prop
-          // onBeforeSubmit={handleBeforeSubmit}
           stop={stop} // Pass stop function
           status={status} // Pass status
-          // Removed props related to old frontend limit
-          // currentMessageCount={currentMessageCount}
-          // maxChatMessages={MAX_CHAT_MESSAGES}
-          disabled={isDailyLimitReached} // Disable input when daily limit is hit
+          disabled={isDailyLimitReached || contextUsagePercent > 90} // Disable input if daily limit hit or context > 90%
+          contextUsagePercent={contextUsagePercent}
           onInputAndFilesChange={(inputText, files) => {
             setInputText(inputText);
             setAttachedFiles(files);

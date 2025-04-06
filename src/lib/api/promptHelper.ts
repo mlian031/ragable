@@ -6,6 +6,7 @@ import {
   FORMATTING_RULES,
   NEGATIVE_CONSTRAINTS,
   FEW_SHOT_EXAMPLES,
+  MARKDOWN_EXAMPLES,
 } from '@/prompts/prompt-templates';
 
 /**
@@ -28,6 +29,7 @@ export function buildSystemPrompt(activeModeIds: string[]): string {
     FORMATTING_RULES,
     NEGATIVE_CONSTRAINTS,
     FEW_SHOT_EXAMPLES,
+    MARKDOWN_EXAMPLES,
   ];
 
   return finalPromptParts.join('\n\n');

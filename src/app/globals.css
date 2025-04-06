@@ -64,6 +64,61 @@
   }
 }
 
+@layer base {
+  /* Enhanced heading spacing */
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+
+  /* Stylish blockquotes */
+  .prose blockquote {
+    @apply border-l-4 border-primary/30 pl-4 italic bg-muted/20 rounded-md py-2 px-3;
+    margin: 1.5rem 0;
+  }
+
+  /* Code blocks */
+  .prose pre {
+    @apply rounded-lg bg-muted p-4 overflow-x-auto shadow;
+    margin: 1.5rem 0;
+  }
+
+  /* Tables inspired by GitHub */
+  .prose table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    display: block;
+    border: 1px solid var(--color-border); /* reinforce outer border */
+  }
+
+  .prose thead {
+    background-color: var(--color-muted);
+  }
+
+  .prose tr:nth-child(even) {
+    background-color: var(--color-muted);
+  }
+
+  .prose th,
+  .prose td {
+    border: 1px solid var(--color-border); /* reinforce cell borders */
+    padding: 0.5rem 1rem;
+    text-align: left;
+  }
+
+  .prose th {
+    font-weight: 600;
+    background-color: var(--color-muted);
+  }
+
+  .prose table img {
+    background-color: transparent;
+  }
+}
+
 :root {
   --radius: 0.4rem;
   --background: oklch(1 0 0);
@@ -151,13 +206,18 @@
     /* Switch prose to sans-serif */
     @apply font-sans;
 
+    /* Allow horizontal scrolling instead of clipping */
+    overflow-x: auto;
+    max-width: 48rem; /* Limit line length for readability */
+    line-height: 2rem; /* Increase line height for better readability */
+
     h1, h2, h3, h4, h5, h6 {
-      @apply font-heading font-normal;
+      @apply font-heading font-normal leading-6;
     }
 
     /* Increase paragraph spacing slightly */
     p {
-      @apply leading-relaxed text-base; /* Removed my-4 */
+      @apply leading-relaxed text-base/8;
     }
 
     blockquote {
@@ -167,6 +227,18 @@
     code {
       @apply font-mono text-xs px-1 py-0.5 bg-muted rounded;
     }
+  }
+
+  /* Improve LaTeX rendering */
+  .prose .katex {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .prose .katex-display {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    overflow-x: auto;
   }
   
   /* Refined input fields and buttons */
