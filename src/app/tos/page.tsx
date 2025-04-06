@@ -33,8 +33,7 @@ export default function TermsOfServicePage() {
             PLEASE READ THESE TERMS CAREFULLY. BY ACCESSING, REGISTERING FOR, OR
             USING THE SERVICE IN ANY MANNER, YOU (&quot;USER,&quot; &quot;YOU,&quot;
               &quot;YOUR&quot;) ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND
-            AGREE TO BE BOUND BY THESE TERMS AND OUR PRIVACY POLICY ([Insert Link
-            to Privacy Policy Here], incorporated herein by reference). IF YOU DO
+            AGREE TO BE BOUND BY THESE TERMS AND OUR PRIVACY POLICY, (https://ragable.ca/privacy-policy, incorporated herein by reference). IF YOU DO
             NOT AGREE TO THESE TERMS OR THE PRIVACY POLICY, YOU MAY NOT ACCESS OR
             USE THE SERVICE.
           </p>
@@ -85,9 +84,7 @@ export default function TermsOfServicePage() {
           <p>
             We offer various service tiers, potentially including free and paid
             plans. Specific features and limitations may vary depending on the
-            plan selected. Please refer to our Pricing page ([Insert Link to
-            Pricing Page, if applicable] or indicate where this info can be
-            found) for details.
+            plan selected. Please refer to our Pricing page (https://ragable.ca/pricing) for details.
           </p>
 
           <h3>3. User Accounts and Eligibility</h3>

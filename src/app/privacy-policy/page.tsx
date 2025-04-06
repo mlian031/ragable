@@ -12,7 +12,7 @@ export default function PrivacyPolicyPage() {
           <p>
             Okay, here is a comprehensive Privacy Policy drafted for Ragable
             Inc., incorporating the specified vendors (Supabase, Google Cloud
-            Platform) and considering the Canadian context (Ottawa, Ontario).
+            Platform) and considering the Canadian context (Toronto, Ontario).
           </p>
 
           <hr />
@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
 
           <p>
             This Privacy Policy should be read in conjunction with our Terms of
-            Service ([Insert Link to Terms of Service Here]).
+            Service (https://ragable.ca/tos).
           </p>
 
           <h3>2. Information We Collect</h3>
@@ -284,7 +284,7 @@ export default function PrivacyPolicyPage() {
           <h3>7. Data Security</h3>
 
           <p>
-            Ragable takes reasonable administrative, technical, and physical
+            Ragable takes industry-standard and reasonable administrative, technical, and physical
             security measures to protect your personal information from loss,
             theft, misuse, unauthorized access, disclosure, alteration, and
             destruction. We leverage security features provided by our vendors
