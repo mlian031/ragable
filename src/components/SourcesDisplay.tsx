@@ -115,9 +115,9 @@ export const SourcesDisplay: React.FC<SourcesDisplayProps> = ({ sources }) => {
             return (
               <div
                 key={sourceId}
-                className="flex-shrink-0 w-64 rounded-lg border border-border/50 bg-background p-3 snap-start"
+                className="flex-shrink-0 w-64 rounded-lg border border-border/50 bg-background px-4 snap-start"
               >
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 pt-6 px-2">
                   <div className="relative w-6 h-6 rounded bg-muted flex items-center justify-center overflow-hidden">
                     <img
                       src={`https://www.google.com/s2/favicons?sz=64&domain_url=${encodeURIComponent(src.url)}`}
@@ -125,23 +125,14 @@ export const SourcesDisplay: React.FC<SourcesDisplayProps> = ({ sources }) => {
                       className="w-4 h-4 object-contain"
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-xs line-clamp-1">{src.title || 'Untitled Source'}</h3>
-                    <a
+                  <a
                       href={src.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-1 truncate"
+                      className="text-muted-foreground hover:text-foreground text-sm truncate"
                     >
-                      {new URL(src.url).hostname}
-                      <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                      {new URL(src.url).hostname.replace('www.', '').toLowerCase()}
                     </a>
-                    {src.authors && src.authors.length > 0 && (
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        <strong>Authors:</strong> {src.authors.join(', ')}
-                      </p>
-                    )}
-                  </div>
                 </div>
 
                 {src.snippet && (

@@ -68,16 +68,19 @@
 
   /* Subtle link styling inside markdown content */
   .prose a {
-    color: var(--color-primary);
     text-decoration: none;
-    border-bottom: 1px dashed var(--color-primary);
+    color: var(--color-primary);
     font-weight: 500;
     transition: all 0.2s ease;
   }
 
-  .prose a:hover {
+  .prose a.citation-link {
+    border-bottom: 1px dashed var(--color-primary);
+  }
+
+  .prose a.citation-link:hover {
     border-bottom-style: solid;
-    color: var(--color-primary-foreground);
+    color: blue;
   }
 
   /* Custom styling for changelog markdown content */
