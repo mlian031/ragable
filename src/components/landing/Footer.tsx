@@ -39,8 +39,9 @@ export default function Footer() {
       title: "Resources",
       links: [
         { text: "User Guide", href: "/" },
-        { text: "Changelog", href: "/" },
+        { text: "Changelog", href: "/changelog" },
         { text: "FAQs", href: "/faq" },
+        { text: "Uptime and Status", href: "https://ragable.statuspage.io", isExternal: true },
         { text: "Discord Community", href: "https://discord.gg/bzTEStMhER", isExternal: true },
       ],
     },
