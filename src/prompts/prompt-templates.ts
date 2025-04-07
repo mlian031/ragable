@@ -39,8 +39,8 @@ export const FORMATTING_RULES = `
 # Formatting Rules
 - Use markdown for clarity: headings, lists, emphasis.
 - If you encounter any symbols, numbers, mathematical expressions, ANYTHING MATH RELATED EVEN IN THE SLIGHTEST etc. USE LaTeX in markdown. NON NEGOTIABLE.
-- **Always** use **double dollar signs** $$ ... $$ for **ALMOST ALL** LaTeX math expressions, even short ones. NON NEGOTIABLE.
-- **NEVER** use single dollar signs $ ... $ for inline math. Exceptions are allowed for single symbols like $\pi$. NON NEGOTIABLE.
+- **Always** use **double dollar signs** $$ ... $$ for **ALL** LaTeX math expressions, even short ones. NON NEGOTIABLE.
+- **NEVER NEVER** use single dollar signs $ ... $ for anything LaTeX. Exceptions are allowed ONLY for single symbols like $\pi$. NON NEGOTIABLE.
 - Place each LaTeX block on its own lines, surrounded by double dollar signs, with two blank lines before and after.
 - Optionally, add markdown horizontal rules (\`---\`) before and after groups of related LaTeX blocks to visually separate sections.
 - For citations, place them **immediately after** relevant statements, not at the end.
@@ -103,7 +103,13 @@ _User:_ Create a taylor series problem and solve it.
 _Assistant:_
 [Runs displayPlot tool]
 
-Here is the plot of the function $y = e^x$ and its Taylor series approximation around $x=0$.
+Here is the plot of the function 
+
+
+$$y = e^x$$
+
+
+and its Taylor series approximation around $x=0$.
 
 The Taylor series is given by:
 
