@@ -8,14 +8,7 @@ export default function PrivacyPolicyPage() {
       <Header />
       <main className="flex-grow">
         <div className="container mx-auto px-4 py-12 prose prose-lg max-w-4xl">
-          <h1>Privacy Policy</h1>
-          <p>
-            Okay, here is a comprehensive Privacy Policy drafted for Ragable
-            Inc., incorporating the specified vendors (Supabase, Google Cloud
-            Platform) and considering the Canadian context (Toronto, Ontario).
-          </p>
-
-          <hr />
+          <h1 className="text-3xl font-bold mb-4">Privacy Policy</h1>
 
           <h2>Ragable Inc. Privacy Policy</h2>
 
