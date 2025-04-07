@@ -49,9 +49,9 @@ export const metadata: Metadata = {
   // manifest: "/manifest.json", // Optional: Add manifest path if it exists
   openGraph: {
     // Updated title
-    title: "Ragable - AI Chat with Sources, Graphing, Chemistry & Code",
+    title: "Ragable - Agentic Co-pilot for Learning",
     // Updated description
-    description: "A modern AI chat interface with source citations, graphing capabilities, chemistry visualizations, code generation, and academic writing assistance.",
+    description: "Ragable enables you to learn and master with confidence. A modern AI chat interface with source citations, graphing capabilities, chemistry visualizations, code generation, and academic writing assistance.",
     url: siteUrl,
     siteName: "Ragable",
     images: [
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     // Updated title
     title: "Ragable - AI Chat with Sources, Graphing, Chemistry & Code",
     // Updated description
-    description: "A modern AI chat interface with source citations, graphing capabilities, chemistry visualizations, code generation, and academic writing assistance.",
+    description: "Ragable enables you to learn and master with confidence. A modern AI chat interface with source citations, graphing capabilities, chemistry visualizations, code generation, and academic writing assistance.",
     // creator: '@yourtwitterhandle', // Optional: Add Twitter handle
     images: [imageUrl], // Using the provided image URL
   },
