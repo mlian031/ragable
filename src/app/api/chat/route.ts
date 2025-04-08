@@ -121,6 +121,32 @@ export async function POST(req: Request): Promise<Response> {
         if (Array.isArray(lastMessage.content)) {
             const fileParts = lastMessage.content.filter(part => part.type === 'file');
             console.log(`[API] Found ${fileParts.length} file parts processed by SDK in last message.`);
+
+            // Enforce max total attachment size of 15MB
+            const totalAttachmentSizeBytes = fileParts.reduce((sum, part) => {
+              let estimatedSize = 0;
+              if (typeof part === 'object' && part !== null) {
+                const dataStr = (part.data || '') as string;
+                if (typeof dataStr === 'string' && dataStr.startsWith('data:')) {
+                  // Remove data URL prefix
+                  const base64Index = dataStr.indexOf('base64,');
+                  if (base64Index !== -1) {
+                    const base64Str = dataStr.substring(base64Index + 7);
+                    // Base64 expands data by ~4/3, so estimate original size
+                    estimatedSize = Math.floor((base64Str.length * 3) / 4);
+                  }
+                }
+              }
+              return sum + estimatedSize;
+            }, 0);
+            const maxTotalSizeBytes = 15 * 1024 * 1024;
+            if (totalAttachmentSizeBytes > maxTotalSizeBytes) {
+              console.warn(`[API] Total attachment size ${totalAttachmentSizeBytes} exceeds 15MB limit.`);
+              return NextResponse.json(
+                { error: 'Total attachment size exceeds 15MB limit.' },
+                { status: 413 }
+              );
+            }
         }
     }
 

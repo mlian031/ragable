@@ -69,16 +69,25 @@ export function ChatInput({
   const [selectedFileList, setSelectedFileList] = useState<FileList | undefined>(undefined); // State for FileList
 
   // Constants for validation (replace with values from old hook or config)
-  const maxFiles = 5; // Example limit
-  const maxTotalSizeMB = 50; // Example limit
+  const maxFiles = 1000; // Effectively unlimited files
+  const maxTotalSizeMB = 15; // 15MB combined size limit
   // Wrap allowedMimeTypes in useMemo
-  const allowedMimeTypes = useMemo(() => [
-    "image/jpeg",
-    "image/png",
-    "image/gif",
-    "image/webp",
-    "application/pdf"
-  ], []); // Empty dependency array means it's created only once
+  const allowedMimeTypes = useMemo(
+    () => [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+      "application/pdf",
+      "text/plain",
+      "text/csv", // Added CSV
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // Added XLSX
+    ],
+    []
+  ); // Empty dependency array means it's created only once
 
   // Convert FileList to Array for easier handling in UI/validation and memoize it
   const selectedFilesArray = useMemo(() => {
