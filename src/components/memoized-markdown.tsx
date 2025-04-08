@@ -26,7 +26,7 @@ const MemoizedMarkdownBlock = memo(
         remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
         rehypePlugins={[rehypeKatex]}
         components={{
-          a: ({ node, ...props }) => (
+          a: ({ /* node, */ ...props }) => (
             <a {...props} className={`citation-link ${props.className || ''}`} />
           ),
         }}

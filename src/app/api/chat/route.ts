@@ -5,7 +5,7 @@ import { gemini25ProModel } from '@/lib/vertex'; // Non-grounded model for chat
 // Removed Buffer import
 
 // Import helpers and tools
-import { buildSystemPrompt } from '@/lib/api/promptHelper';
+import { buildSystemPrompt } from '@/prompt/buildPrompt';
 import { webSearchTool } from '@/lib/tools/webSearchTool';
 import { displayCodeTool } from '@/lib/tools/displayCodeTool';
 import { displayMoleculeTool } from '@/lib/tools/displayMoleculeTool';
@@ -126,6 +126,8 @@ export async function POST(req: Request): Promise<Response> {
 
     // 2. Build System Prompt
     const finalSystemPrompt = buildSystemPrompt(receivedActiveModeIds);
+
+    console.log('[API] Final system prompt:', finalSystemPrompt);
 
     // 3. Call AI Model
     // Pass the messages array directly as received from the request body
