@@ -31,9 +31,9 @@ export default async function ProfilePage() {
   const identities = identitiesData?.identities;
 
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
+    <div className="min-h-svh flex flex-col items-center">
       {/* Left content column */}
-      <div className="flex flex-col gap-6 p-6 md:p-10">
+      <div className="flex flex-col gap-6 p-6 md:p-10 animate-fade-in transition-opacity duration-700">
         <div className="flex justify-center gap-2 md:justify-start">
           <Link href="/" className="flex items-center gap-2 font-medium">
             <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
@@ -49,16 +49,16 @@ export default async function ProfilePage() {
           </Link>
         </div>
         
-        <div className="flex-1 max-w-md mx-auto w-full">
+        <div className="flex-1 max-w-3xl mx-auto w-full">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold mb-2">Your Profile</h1>
-            <p className="text-muted-foreground text-sm">
+            <h1 className="text-3xl font-bold mb-3">Your Profile</h1>
+            <p className="text-muted-foreground text-base">
               Manage your account settings and connected services
             </p>
             <Separator className="mt-4" />
           </div>
           
-          <Card className="w-full">
+          <Card className="w-full transition-transform duration-300 hover:scale-[1.02] hover:shadow-lg">
             <CardHeader>
               <CardTitle>Connected Accounts</CardTitle>
               <CardDescription>
@@ -73,27 +73,6 @@ export default async function ProfilePage() {
               />
             </CardContent>
           </Card>
-        </div>
-      </div>
-      
-      {/* Right background column */}
-      <div className="bg-muted relative hidden lg:block">
-       <Image
-         src="https://storage.googleapis.com/ragable-static/grainient-2.png"
-         alt="Abstract background"
-         className="absolute inset-0 h-full w-full object-cover"
-          fill
-          priority
-        />
-        
-        {/* Overlay with a quote or message */}
-        <div className="absolute inset-0 flex items-center justify-center p-12">
-          <div className="bg-background/80 backdrop-blur-sm p-8 rounded-xl max-w-md">
-            <h2 className="text-xl font-medium mb-4">Your AI learning partner</h2>
-            <p className="text-muted-foreground">
-              Manage your account settings here. Connect with third-party services to enhance your experience and tailor Ragable to your needs.
-            </p>
-          </div>
         </div>
       </div>
       

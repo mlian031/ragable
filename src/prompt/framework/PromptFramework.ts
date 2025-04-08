@@ -1,18 +1,18 @@
-export interface PromptComponent {
+export interface PromptComponent<ContextType = Record<string, unknown>> {
   id: string;
   order: number;
   tagName: string;
-  enabled?: boolean | ((context?: any) => boolean);
-  getContent(context?: any): string;
+  enabled?: boolean | ((context?: ContextType) => boolean);
+  getContent(context?: ContextType): string;
 }
 
-export class StaticPromptComponent implements PromptComponent {
+export class StaticPromptComponent<ContextType = Record<string, unknown>> implements PromptComponent<ContextType> {
   constructor(
     public id: string,
     public content: string,
     public tagName: string,
     public order: number,
-    public enabled: boolean | ((context?: any) => boolean) = true
+    public enabled: boolean | ((context?: ContextType) => boolean) = true
   ) {}
 
   getContent(): string {
@@ -20,10 +20,10 @@ export class StaticPromptComponent implements PromptComponent {
   }
 }
 
-export class PromptBuilder {
-  constructor(private components: PromptComponent[]) {}
+export class PromptBuilder<ContextType = Record<string, unknown>> {
+  constructor(private components: PromptComponent<ContextType>[]) {}
 
-  build(context?: any): string {
+  build(context?: ContextType): string {
     return this.components
       .filter((c) =>
         typeof c.enabled === 'function' ? c.enabled(context) : c.enabled !== false

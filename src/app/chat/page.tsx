@@ -401,9 +401,13 @@ export default function Chat() {
             ))
           ) : (
             // --- Empty Chat View ---
-            <div className="flex h-full flex-col items-center justify-center space-y-4 text-muted-foreground">
-              <h1 className="text-4xl">Welcome!</h1>
-              <p className="font-mono lowercase">What can I help you learn?</p>
+            <div className="flex h-full flex-col items-center justify-center px-4 text-center space-y-6">
+              <h1 className="text-xl md:text-2xl font-normal tracking-wide *:text-gray-400 dark:text-gray-100">
+                Hi {currentUser?.user_metadata?.full_name || 'there'}!
+              </h1>
+              <p className="text-sm tracking-widest md:text-lg max-w-2xl mx-auto text-gray-600 dark:text-gray-100">
+                What do you want to learn today?
+              </p>
             </div>
           )}
           {/* Scroll Anchor */}

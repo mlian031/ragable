@@ -381,8 +381,8 @@ export function ChatInput({
                     <div className="grow">
                       <Textarea
                         ref={inputRef}
-                        rows={1} // Start with a single row
-                        className="w-full border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-3 min-h-[48px] max-h-[250px] overflow-y-auto rounded-none text-sm bg-transparent resize-none" // Enforce max height with scroll
+                        rows={3} // Start with a three row
+                        className="dark:bg-black w-full border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 py-3 min-h-[48px] max-h-[250px] overflow-y-auto rounded-none text-sm resize-none" // Enforce max height with scroll
                         value={input}
                         placeholder={placeholder}
                         onKeyDown={handleKeyDown} // Add keydown handler

@@ -1,9 +1,33 @@
 # Changelog
 
 ---
+version: 0.0.24
+date: 2025-04-08
+title: v0.0.24 (2025-04-08)
+---
+
+## New Features
+
+- Profile, settings page UI changes
+- Personalized greeting message
+
+## Bug Fixes
+
+- Optimizations to prompts
+- Improve tool functions
+
+## Coming Soon
+
+- Course spaces
+- Self-checkout for the Pro Plan
+- One click exam generation
+- Agent mode
+
+
+---
 version: 0.0.23
 date: 2025-04-07
-title: v0.0.23 (2025-04-06)
+title: v0.0.23 (2025-04-07)
 ---
 
 ## New Features
