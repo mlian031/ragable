@@ -29,21 +29,21 @@ const vertexProvider = createVertex({
 
 // Export specific models for convenience
 // Note: Availability of experimental models might change.
-const geminiThinkingModel = vertexProvider("gemini-2.0-flash-thinking-exp-01-21");
+const geminiThinkingModel = vertexProvider("gemini-2.5-pro-preview-05-06");
 // Enable search grounding for the flash model
 const geminiFlashModel = vertexProvider("gemini-2.0-flash-001", {
   useSearchGrounding: true,
 });
-const geminiProModel = vertexProvider("gemini-2.0-pro-exp-02-05", {
+const geminiProModel = vertexProvider("gemini-2.5-pro-preview-05-06", {
   useSearchGrounding: true,
 });
 const geminiFlashLiteModel = vertexProvider("gemini-2.0-flash-lite-001");
 // Grounded version of 2.5 Pro
-const gemini25ProModelGrounded = vertexProvider("gemini-2.5-pro-exp-03-25", {
+const gemini25ProModelGrounded = vertexProvider("gemini-2.5-pro-preview-05-06", {
   useSearchGrounding: true,
 });
 // Non-grounded version of 2.5 Pro (for main chat generation)
-const gemini25ProModel = vertexProvider("gemini-2.5-pro-exp-03-25"); // Ensure no grounding option here
+const gemini25ProModel = vertexProvider("gemini-2.5-pro-preview-05-06"); // Ensure no grounding option here
 const embeddingModel = vertexProvider.textEmbeddingModel('text-embedding-004');
 
 export {
